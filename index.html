@@ -216,9 +216,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="introduction">0. Introduction</h1>
-<p>체결 데이터(틱데이터)를 사용할 때, 데이터가 지나치게 raw해서 생기는 난감한 부분들이 많습니다. 이를 해결하기 위해 "분봉"이나 "일봉"처럼, 일정한 시간을 기준으로 체결내역을 grouping하는 전처리 방법이 가장 많이 사용되는 것 같습니다. 이러한 방법의 장단점은 무엇일까요? 혹시 다른 방법은 없을까요? 어떻게 구현을 해야 할까요?</p>
-<p><strong>Marcos Lopez de Prado의 저서 <em>Advances in Financial Machine Learning</em></strong>에 위 질문들에 대한 답변이 정리가 잘 되어있습니다. <strong>이번 포스팅은 해당 서적의 "2.3 Financial Data Structures: Bars" 챕터를 공부하며 이해한 내용을 정리한 내용입니다.</strong> 워낙 유명한 저서인지라, 책의 내용에 대한 구현을 정리해놓은 <a href="https://github.com/hudson-and-thames/mlfinlab" rel="external nofollow noopener noreferrer" target="_blank">github repo</a>도 있습니다. 다만, 모듈화를 위해 로직이 흩어져있어서 이해하기가 쉽지 않아, Python pandas를 사용하여 직접 구현을 해보았습니다.</p>
+          <h1 id="0-Introduction"><a href="#0-Introduction" class="headerlink" title="0. Introduction"></a>0. Introduction</h1><p>체결 데이터(틱데이터)를 사용할 때, 데이터가 지나치게 raw해서 생기는 난감한 부분들이 많습니다. 이를 해결하기 위해 “분봉”이나 “일봉”처럼, 일정한 시간을 기준으로 체결내역을 grouping하는 전처리 방법이 가장 많이 사용되는 것 같습니다. 이러한 방법의 장단점은 무엇일까요? 혹시 다른 방법은 없을까요? 어떻게 구현을 해야 할까요?</p>
+<p><strong>Marcos Lopez de Prado의 저서 <em>Advances in Financial Machine Learning</em></strong>에 위 질문들에 대한 답변이 정리가 잘 되어있습니다. <strong>이번 포스팅은 해당 서적의 “2.3 Financial Data Structures: Bars” 챕터를 공부하며 이해한 내용을 정리한 내용입니다.</strong> 워낙 유명한 저서인지라, 책의 내용에 대한 구현을 정리해놓은 <a href="https://github.com/hudson-and-thames/mlfinlab" rel="external nofollow noopener noreferrer" target="_blank">github repo</a>도 있습니다. 다만, 모듈화를 위해 로직이 흩어져있어서 이해하기가 쉽지 않아, Python pandas를 사용하여 직접 구현을 해보았습니다.</p>
 <p>포스팅의 내용 혹은 코드에 개선이 필요한 경우, 피드백을 주시면 감사하겠습니다. :)</p>
           <!--noindex-->
             <div class="post-button">
@@ -277,7 +276,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2020-08-06 13:21:17" itemprop="dateModified" datetime="2020-08-06T13:21:17+09:00">2020-08-06</time>
+                <time title="Updated at: 2020-08-24 15:47:17" itemprop="dateModified" datetime="2020-08-24T15:47:17+09:00">2020-08-24</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -314,13 +313,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="introduction">Introduction</h1>
-<p>Python으로 코드를 짤 때, 로그를 띄우는 방법으로 <code>print('[*] Message')</code>를 정말 많이 써 왔습니다. 군더더기 없고, 유연하고, dependency 없이 아무 위치에나 넣을 수 있다는 점이 좋았습니다. '좋았다' 보다는 '편했다' 혹은 '귀찮았다'가 더 적절한 것 같습니다. 혼자서 사용하는 프로그램을 짤 때는 exception 처리나 로그 처리에 신경을 쓰지 않아도 문제가 없었기 때문인 것 같습니다.</p>
-<p>이러한 방법은 문제가 많이 있습니다. 중요도에 따라서 로그를 분류할 수도 없을 뿐더러, 코드를 수정하지 않는 이상 로그를 컨트롤 할 수도 없습니다. 정말로 print 되어야 하는 내용과 로그가 뒤섞여 버려서 화면이 지저분해지는 것도 문제입니다. <em>(Fang's coding note)</em> 가끔은 조용히 프로그램을 돌리고 싶을 때도 있고, 가끔은 verbose 해지고 싶어질 때도 있잖아요?</p>
-<p align="center">
-<img src="/images/morpheus_logging.jpg" title="fig:" alt="Better Logging">
-</p>
-<p><strong>Python에서는 <code>logging</code> 모듈을 기본적으로 제공합니다.</strong> 이제 <code>print('[*] ...')</code>만 사용하지 말고, <code>logging</code> 모듈을 통해 멋지고 깔끔한 로깅을 해봅시다. 이번 포스트를 통해 Python에서 제공하는 <code>logging</code> 모듈을 어떻게 사용하는지 알아보도록 하겠습니다. 또한, '좋은 로그 처리 방법'이 어떤 성질을 지니고 있을 지에 대한 고민도 해보겠습니다.</p>
+          <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>Python으로 코드를 짤 때, 로그를 띄우는 방법으로 <code>print(&#39;[*] Message&#39;)</code>를 정말 많이 써 왔습니다. 군더더기 없고, 유연하고, dependency 없이 아무 위치에나 넣을 수 있다는 점이 좋았습니다. ‘좋았다’ 보다는 ‘편했다’ 혹은 ‘귀찮았다’가 더 적절한 것 같습니다. 혼자서 사용하는 프로그램을 짤 때는 exception 처리나 로그 처리에 신경을 쓰지 않아도 문제가 없었기 때문인 것 같습니다.</p>
+<p>이러한 방법은 문제가 많이 있습니다. 중요도에 따라서 로그를 분류할 수도 없을 뿐더러, 코드를 수정하지 않는 이상 로그를 컨트롤 할 수도 없습니다. 정말로 print 되어야 하는 내용과 로그가 뒤섞여 버려서 화면이 지저분해지는 것도 문제입니다. <em>(Fang’s coding note)</em> 가끔은 조용히 프로그램을 돌리고 싶을 때도 있고, 가끔은 verbose 해지고 싶어질 때도 있잖아요?</p>
+<p align="center"><img src="/images/morpheus_logging.jpg" alt="Better Logging"></p>
+
+<p><strong>Python에서는 <code>logging</code> 모듈을 기본적으로 제공합니다.</strong> 이제 <code>print(&#39;[*] ...&#39;)</code>만 사용하지 말고, <code>logging</code> 모듈을 통해 멋지고 깔끔한 로깅을 해봅시다. 이번 포스트를 통해 Python에서 제공하는 <code>logging</code> 모듈을 어떻게 사용하는지 알아보도록 하겠습니다. 또한, ‘좋은 로그 처리 방법’이 어떤 성질을 지니고 있을 지에 대한 고민도 해보겠습니다.</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2019/python-logging/#more" rel="contents">
@@ -415,11 +412,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="안녕-비동기">0. 안녕, 비동기!</h1>
-<p>Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다...만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐기 때문입니다. 뿐만 아니라, 'asynchronous'라는 용어 자체를 듣기만 해도 뭔가 어렵고 복잡하고 막연하게 두려운 느낌도 듭니다.</p>
-<p align="center">
-<img src="/images/why_so_async.png" title="fig:" alt="Async, Async Everywhere">
-</p>
+          <h1 id="0-안녕-비동기"><a href="#0-안녕-비동기" class="headerlink" title="0. 안녕, 비동기!"></a>0. 안녕, 비동기!</h1><p>Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다…만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐기 때문입니다. 뿐만 아니라, ‘asynchronous’라는 용어 자체를 듣기만 해도 뭔가 어렵고 복잡하고 막연하게 두려운 느낌도 듭니다.</p>
+<p align="center"><img src="/images/why_so_async.png" alt="Async, Async Everywhere"></p>
+
 <p>하루 날을 잡고 asynchronous python과 관련된 자료들을 왕창 읽어보았습니다. 이 글은 키워드 <strong>generator, coroutine, asyncio</strong>와 신택스 <strong><code>yield</code>, <code>yield from</code>, <code>async</code>, <code>await</code></strong> 에 대한 이해가 없던 제가, 나름대로 이해를 하는 과정을 기록한 것입니다. <strong>혹시나 제가 잘못 이해하고 있는 부분이 있으면 말씀해주시면 감사하겠습니다</strong>.</p>
           <!--noindex-->
             <div class="post-button">

@@ -3,13 +3,6 @@
 
 
     <url>
-        <loc>https://hwangheek.github.io/tags/Python/</loc>
-        <lastmod>2020-08-24T06:39:48.611Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://hwangheek.github.io/tags/System-Trading/</loc>
         <lastmod>2020-08-24T06:39:48.611Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -19,6 +12,13 @@
     <url>
         <loc>https://hwangheek.github.io/tags/Advances-in-Financial-Machine-Learning/</loc>
         <lastmod>2020-08-24T06:39:48.611Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://hwangheek.github.io/tags/Python/</loc>
+        <lastmod>2020-08-24T06:47:17.684Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
