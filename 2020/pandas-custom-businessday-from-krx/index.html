@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto Sans KR:300,300italic,400,400italic,700,700italic|Nanum Gothic Coding:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hwangheek.github.io","root":"/","scheme":"Mist","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="0. IntroductionPython을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.  조금 찾">
+<meta name="keywords" content="Python,System Trading,Pandas">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기">
+<meta property="og:url" content="https://hwangheek.github.io/2020/pandas-custom-businessday-from-krx/index.html">
+<meta property="og:site_name" content="ㅎㅎㅋ">
+<meta property="og:description" content="0. IntroductionPython을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.  조금 찾">
+<meta property="og:locale" content="ko">
+<meta property="og:image" content="https://hwangheek.github.io/images/2020-10-say-datetime-one-more-time.jpg">
+<meta property="og:updated_time" content="2020-10-28T03:13:42.976Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기">
+<meta name="twitter:description" content="0. IntroductionPython을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.  조금 찾">
+<meta name="twitter:image" content="https://hwangheek.github.io/images/2020-10-say-datetime-one-more-time.jpg">
+
+<link rel="canonical" href="https://hwangheek.github.io/2020/pandas-custom-businessday-from-krx/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'ko'
+  };
+</script>
+
+  <title>KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기 | ㅎㅎㅋ</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-132879183-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-132879183-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+  <meta name="google-site-verification" content="9R0_8uEr4cg1GEjaFp8ggBSSkp8l0VaSByjQ3NEvWZE">
+  <meta name="naver-site-verification" content="5eee107b67c753a61ed58dcf4b28313d06709d9f">
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ㅎㅎㅋ</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>홈</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>아카이브</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://hwangheek.github.io/2020/pandas-custom-businessday-from-krx/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Hwanghee Kim">
+      <meta itemprop="description" content="ㅎㅎㅋ의 개인 연구실">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ㅎㅎㅋ">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+              
+
+              <time title="Post created: 2020-10-28 12:13:26 / Updated at: 12:13:42" itemprop="dateCreated datePublished" datetime="2020-10-28T12:13:26+09:00">2020-10-28</time>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2020/pandas-custom-businessday-from-krx/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2020/pandas-custom-businessday-from-krx/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="0-Introduction"><a href="#0-Introduction" class="headerlink" title="0. Introduction"></a>0. Introduction</h1><p>Python을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.</p>
+<img src="/images/2020-10-say-datetime-one-more-time.jpg" class="datetime anger" width="500" title="datetime anger">
+<p>조금 찾아보니, pandas에서 이러한 문제를 관리할 수 있는 방법이 있었습니다. 본 포스팅은 해당 내용을 공부하며 정리한 글 입니다. 글의 내용 중 잘못 된 부분이 있는 경우, 피드백을 주시면 감사하겠습니다. :)</p>
+<a id="more"></a>
+<hr>
+<h1 id="1-pandas의-AbstractHolidayCalendar"><a href="#1-pandas의-AbstractHolidayCalendar" class="headerlink" title="1. pandas의 AbstractHolidayCalendar"></a>1. pandas의 <code>AbstractHolidayCalendar</code></h1><h2 id="1-1-pandas의-Holiday를-사용하여-정의하기"><a href="#1-1-pandas의-Holiday를-사용하여-정의하기" class="headerlink" title="1.1. pandas의 Holiday를 사용하여 정의하기"></a>1.1. pandas의 <code>Holiday</code>를 사용하여 정의하기</h2><p>pandas의 <a href="https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html?highlight=abstractholidaycalendar#holidays-holiday-calendars" rel="external nofollow noopener noreferrer" target="_blank"><em><code>AbstractHolidayCalendar</code></em></a>를 사용하여, 사용자가 공휴일을 직접 명시할 수 있습니다. 해당 클래스를 상속하는 클래스를 정의하고, 공휴일에 대한 정보를 담고 있는 클래스 변수 <code>rules</code>를 override 하면 됩니다. 각 공휴일은 pandas의 <code>Holiday</code> 클래스를 이용하여 아래와 같이 입력해줍니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pandas.tseries.holiday <span class="keyword">import</span> AbstractHolidayCalendar, Holiday</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleCalendar</span><span class="params">(AbstractHolidayCalendar)</span>:</span></span><br><span class="line">    rules = [</span><br><span class="line">      Holiday(<span class="string">'Example Holiday'</span>, month=<span class="number">3</span>, day=<span class="number">21</span>),</span><br><span class="line">      Holiday(<span class="string">'Another Example Holiday'</span>, year=<span class="number">2018</span>, month=<span class="number">8</span>, day=<span class="number">14</span>),</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure>
+<p><code>Holiday</code> 클래스의 경우 <code>offset</code> 혹은 <code>observance</code> 인자를 통해 조금 더 상세한 설정이 가능합니다.</p>
+<p><code>offset</code>은 명시된 일자와 실제 공휴일 간의 일자 차이를 의미합니다. 주로 <code>pandas.DateOffset</code>과 함께 사용하여 “셋째 주 월요일”과 같은 식의 공휴일을 지정하는데 많이 사용됩니다.</p>
+<p><code>observance</code>는 날짜로 주어진 공휴일에 대한 일종의 후처리 로직입니다. 주어진 날짜가 주말일 경우 공휴일을 다음주 월요일로 미룰지(<code>next_monday</code>), 주말 직전 금요일로 당길지(<code>previous_friday</code>) 등을 설정할 수 있습니다. pandas에서 기본적으로 제공되는 함수들을 사용하거나, 직접 정의한 함수를 사용할 수 있습니다.</p>
+<p>실제 사용 예시를 확인하시면 이해가 쉽습니다. 아래는 pandas에서 기본적으로 제공되는 미국 공휴일 캘린더 클래스(<code>USFederalHolidayCalendar</code>)입니다. (pandas 1.1 기준으로, <a href="https://github.com/pandas-dev/pandas/blob/1.1.x/pandas/tseries/holiday.py" rel="external nofollow noopener noreferrer" target="_blank"><em><code>pandas.tseries.holiday</code></em></a> 모듈에서 구현을 찾으실 수 있습니다.)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pandas.tseries.offsets <span class="keyword">import</span> DateOffset</span><br><span class="line"><span class="keyword">from</span> pandas.tseries.holiday <span class="keyword">import</span> AbstractHolidayCalendar, Holiday, nearest_workday</span><br><span class="line"><span class="keyword">from</span> dateutil.relativedelta <span class="keyword">import</span> MO, TU, WE, TH, FR, SA, SU</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">USFederalHolidayCalendar</span><span class="params">(AbstractHolidayCalendar)</span>:</span></span><br><span class="line">    rules = [</span><br><span class="line">        Holiday(</span><br><span class="line">          <span class="string">"New Years Day"</span>, month=<span class="number">1</span>, day=<span class="number">1</span>,</span><br><span class="line">          observance=nearest_workday  <span class="comment"># 1월 1일이 토요일인 경우 직전 금요일을,</span></span><br><span class="line">                                      <span class="comment"># 일요일인 경우 이후 월요일을 공휴일로 사용</span></span><br><span class="line">        ),</span><br><span class="line">        Holiday(</span><br><span class="line">          <span class="string">"Martin Luther King Jr. Day"</span>,</span><br><span class="line">          start_date=datetime(<span class="number">1986</span>, <span class="number">1</span>, <span class="number">1</span>), month=<span class="number">1</span>, day=<span class="number">1</span>,</span><br><span class="line">          offset=DateOffset(weekday=MO(<span class="number">3</span>))  <span class="comment"># 1986년 이후 1월의 셋째 주 월요일을 공휴일로 사용</span></span><br><span class="line">        ),</span><br><span class="line">        Holiday(</span><br><span class="line">          <span class="string">"Presidents Day"</span>,</span><br><span class="line">          month=<span class="number">2</span>, day=<span class="number">1</span>,</span><br><span class="line">          offset=DateOffset(weekday=MO(<span class="number">3</span>))  <span class="comment"># 2월 셋째 주 월요일을 공휴일로 사용</span></span><br><span class="line">        ),</span><br><span class="line">        Holiday(</span><br><span class="line">          <span class="string">"Memorial Day"</span>,</span><br><span class="line">          month=<span class="number">5</span>, day=<span class="number">31</span>,</span><br><span class="line">          offset=DateOffset(weekday=MO(<span class="number">-1</span>))  <span class="comment"># 5월 마지막 월요일을 공휴일로 사용</span></span><br><span class="line">        ),</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 이하 동일</span></span><br><span class="line">        Holiday(<span class="string">"July 4th"</span>, month=<span class="number">7</span>, day=<span class="number">4</span>, observance=nearest_workday),</span><br><span class="line">        Holiday(<span class="string">"Labor Day"</span>, month=<span class="number">9</span>, day=<span class="number">1</span>, offset=DateOffset(weekday=MO(<span class="number">1</span>))),</span><br><span class="line">        Holiday(<span class="string">"Columbus Day"</span>, month=<span class="number">10</span>, day=<span class="number">1</span>, offset=DateOffset(weekday=MO(<span class="number">2</span>))),</span><br><span class="line">        Holiday(<span class="string">"Veterans Day"</span>, month=<span class="number">11</span>, day=<span class="number">11</span>, observance=nearest_workday),</span><br><span class="line">        Holiday(<span class="string">"Thanksgiving"</span>, month=<span class="number">11</span>, day=<span class="number">1</span>, offset=DateOffset(weekday=TH(<span class="number">4</span>))),</span><br><span class="line">        Holiday(<span class="string">"Christmas"</span>, month=<span class="number">12</span>, day=<span class="number">25</span>, observance=nearest_workday),</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure>
+<h2 id="1-2-DB-정보를-사용하여-정의하기"><a href="#1-2-DB-정보를-사용하여-정의하기" class="headerlink" title="1.2. DB 정보를 사용하여 정의하기"></a>1.2. DB 정보를 사용하여 정의하기</h2><p>위와 같은 방법의 경우, 비주기적인 공휴일이 발생했을 때 소스코드를 수정해 주어야 합니다. 뿐만 아니라 음력으로 공휴일을 세는 경우가 많은 한국의 경우 위의 방법을 사용하기가 애매합니다. 만약 공휴일 혹은 휴장일 파일 혹은 데이터베이스를 구축해 놓은 경우, 위의 코드를 응용하여 데이터베이스의 최신 내용을 기반으로 하는 캘린더를 정의할 수 있습니다.</p>
+<p>아래는 DB에서 가져온 공유일 데이터 <code>holidays</code>를 사용하여 공휴일 캘린더를 정의하는 예시입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pandas.tseries.holiday <span class="keyword">import</span> AbstractHolidayCalendar, Holiday</span><br><span class="line"></span><br><span class="line">holidays = get_holidays_from_your_db()</span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">[</span></span><br><span class="line"><span class="string">  ...</span></span><br><span class="line"><span class="string">  ('어린이날', 2020, 5, 5),</span></span><br><span class="line"><span class="string">  ('추석연휴', 2020, 9, 30),</span></span><br><span class="line"><span class="string">  ('추석연휴', 2020, 10, 1),</span></span><br><span class="line"><span class="string">  ('추석연휴', 2020, 10, 2),</span></span><br><span class="line"><span class="string">  ('한글날', 2020, 10, 9),</span></span><br><span class="line"><span class="string">  ...</span></span><br><span class="line"><span class="string">]</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleCalendar</span><span class="params">(AbstractHolidayCalendar)</span>:</span></span><br><span class="line">    rules = [</span><br><span class="line">        Holiday(holiday[<span class="number">0</span>], year=holiday[<span class="number">1</span>], month=holiday[<span class="number">2</span>], day=holiday[<span class="number">3</span>])</span><br><span class="line">        <span class="keyword">for</span> holiday <span class="keyword">in</span> holidays</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure>
+<h2 id="1-3-한국거래소-휴장일-정보를-크롤링하여-정의하기"><a href="#1-3-한국거래소-휴장일-정보를-크롤링하여-정의하기" class="headerlink" title="1.3. 한국거래소 휴장일 정보를 크롤링하여 정의하기"></a>1.3. 한국거래소 휴장일 정보를 크롤링하여 정의하기</h2><p>한국거래소 홈페이지를 찾아보면 <a href="http://marketdata.krx.co.kr/mdi#document=01100305" rel="external nofollow noopener noreferrer" target="_blank">휴장일 데이터</a>가 있습니다. 별도의 DB를 관리하지 않는 이상, 가장 정확한 한국거래소 개장일 정보가 될 것 같습니다. 아래는 KRX 홈페이지에서 휴장일 정보를 크롤링하여 리스트로 변환한 뒤, 이를 기반으로 캘린더를 정의하는 예시입니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> urllib</span><br><span class="line"><span class="keyword">from</span> pandas.tseries.holiday <span class="keyword">import</span> AbstractHolidayCalendar, Holiday</span><br><span class="line"></span><br><span class="line">results = &#123;&#125;  <span class="comment"># &#123;year: holidays_of_the_year_in_csv_format&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> year <span class="keyword">in</span> range(<span class="number">2009</span>, <span class="number">2024</span>+<span class="number">1</span>):</span><br><span class="line">    res_otp = requests.get(</span><br><span class="line">        <span class="string">'http://marketdata.krx.co.kr/contents/COM/GenerateOTP.jspx'</span>,</span><br><span class="line">        params=&#123;</span><br><span class="line">            <span class="string">'name'</span>: <span class="string">'fileDown'</span>,</span><br><span class="line">            <span class="string">'filetype'</span>: <span class="string">'csv'</span>,</span><br><span class="line">            <span class="string">'url'</span>: <span class="string">'MKD/01/0110/01100305/mkd01100305_01'</span>,</span><br><span class="line">            <span class="string">'search_bas_yy'</span>: year,</span><br><span class="line">        &#125;,</span><br><span class="line">        headers=&#123;<span class="string">'User-Agent'</span>: <span class="string">'Mozilla/5.0'</span>&#125;</span><br><span class="line">    )</span><br><span class="line">    otp = res_otp.text</span><br><span class="line">    </span><br><span class="line">    res_csv = requests.post(</span><br><span class="line">        <span class="string">'http://file.krx.co.kr/download.jspx'</span>,</span><br><span class="line">        headers=&#123;</span><br><span class="line">            <span class="string">'User-Agent'</span>: <span class="string">'Mozilla/5.0'</span>,</span><br><span class="line">            <span class="string">'Content-Type'</span>: <span class="string">'application/x-www-form-urlencoded'</span>,</span><br><span class="line">            <span class="string">'Referer'</span>: <span class="string">'http://marketdata.krx.co.kr/mdi'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">        data=urllib.parse.urlencode(&#123;<span class="string">'code'</span>:otp&#125;)</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    results[year] = res_csv.text</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">holidays = []</span><br><span class="line"><span class="keyword">for</span> year <span class="keyword">in</span> results:</span><br><span class="line">    holidays.extend(</span><br><span class="line">        re.findall(</span><br><span class="line">            <span class="string">r'.*?\,(\d+)-(\d+)-(\d+)(?:\s\(.*?\))?\,(.*?)\s*\,(.*)'</span>,</span><br><span class="line">            results[year]</span><br><span class="line">        )</span><br><span class="line">    )</span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">holidays = [</span></span><br><span class="line"><span class="string">    ...</span></span><br><span class="line"><span class="string">    ('2020', '01', '27', '월요일', '설날(대체휴일)'),</span></span><br><span class="line"><span class="string">    ('2020', '04', '15', '수요일', '21대 국회의원선거'),</span></span><br><span class="line"><span class="string">    ('2020', '04', '30', '목요일', '석가탄신일'),</span></span><br><span class="line"><span class="string">    ('2020', '05', '01', '금요일', '근로자의날'),</span></span><br><span class="line"><span class="string">    ...</span></span><br><span class="line"><span class="string">]</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">KRTradingCalendar</span><span class="params">(AbstractHolidayCalendar)</span>:</span></span><br><span class="line">    rules = [</span><br><span class="line">        Holiday(holiday[<span class="number">2</span>], year=int(holiday[<span class="number">0</span>]), month=int(holiday[<span class="number">1</span>]), day=int(holiday[<span class="number">2</span>]))</span><br><span class="line">        <span class="keyword">for</span> holiday <span class="keyword">in</span> holidays</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure>
+<p>특별한 점은 없지만, csv 형태의 데이터가 2014년 전후로 포맷이 약간 다릅니다. 이를 고려할 수 있도록 정규표현식을 잘 튜닝해 주어야 하겠습니다.</p>
+<hr>
+<h1 id="2-pandas의-CustomBusinessDay"><a href="#2-pandas의-CustomBusinessDay" class="headerlink" title="2. pandas의 CustomBusinessDay"></a>2. pandas의 <code>CustomBusinessDay</code></h1><p>위의 방법들로 정의한 공휴일 캘린더는 <code>CustomBusinessDay</code> 인스턴스를 생성할 때 인자로 전달할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pandas.tseries.offsets <span class="keyword">import</span> CustomBusinessDay</span><br><span class="line"></span><br><span class="line">TDay = TradingDay = CustomBusinessDay(calendar=KRTradingCalendar())</span><br></pre></td></tr></table></figure>
+<p>이렇게 생성된 <code>TDay</code>는 다음과 같은 방법으로 사용할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"></span><br><span class="line">TDay.holidays[<span class="number">155</span>:<span class="number">165</span>]</span><br><span class="line"><span class="string">""" 공휴일 리스트</span></span><br><span class="line"><span class="string">(numpy.datetime64('2020-05-01'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-05-05'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-08-17'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-09-30'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-10-01'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-10-02'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-10-09'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-12-25'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2020-12-31'),</span></span><br><span class="line"><span class="string"> numpy.datetime64('2021-01-01'))</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line">datetime.date(<span class="number">2020</span>, <span class="number">10</span>, <span class="number">6</span>) + TDay    <span class="comment"># Timestamp('2020-10-07 00:00:00')</span></span><br><span class="line">datetime.date(<span class="number">2020</span>, <span class="number">10</span>, <span class="number">6</span>) + TDay*<span class="number">2</span>  <span class="comment"># Timestamp('2020-10-08 00:00:00')</span></span><br><span class="line">datetime.date(<span class="number">2020</span>, <span class="number">10</span>, <span class="number">6</span>) + TDay*<span class="number">3</span>  <span class="comment"># Timestamp('2020-10-12 00:00:00')</span></span><br><span class="line">                                     <span class="comment"># 공휴일(9일)과 주말(10~11일)을 스킵</span></span><br><span class="line"></span><br><span class="line">datetime.date(<span class="number">2020</span>, <span class="number">10</span>, <span class="number">6</span>) - TDay    <span class="comment"># Timestamp('2020-10-05 00:00:00')</span></span><br><span class="line">datetime.date(<span class="number">2020</span>, <span class="number">10</span>, <span class="number">6</span>) - TDay*<span class="number">2</span>  <span class="comment"># Timestamp('2020-09-29 00:00:00')</span></span><br><span class="line">                                     <span class="comment"># 주말(3~4일)과 공휴일(9월 30일~10월 2일)을 스킵</span></span><br><span class="line"></span><br><span class="line">pd.date_range(<span class="string">'2020-10-01'</span>, <span class="string">'2020-10-31'</span>, freq=TDay)</span><br><span class="line">pd.bdate_range(<span class="string">'2020-10-01'</span>, <span class="string">'2020-10-31'</span>, freq=TDay)</span><br><span class="line"><span class="string">""" 공휴일을 제외한 기간 내 영업일</span></span><br><span class="line"><span class="string">DatetimeIndex(['2020-10-05', '2020-10-06', '2020-10-07', '2020-10-08',</span></span><br><span class="line"><span class="string">               '2020-10-12', '2020-10-13', '2020-10-14', '2020-10-15',</span></span><br><span class="line"><span class="string">               '2020-10-16', '2020-10-19', '2020-10-20', '2020-10-21',</span></span><br><span class="line"><span class="string">               '2020-10-22', '2020-10-23', '2020-10-26', '2020-10-27',</span></span><br><span class="line"><span class="string">               '2020-10-28', '2020-10-29', '2020-10-30'],</span></span><br><span class="line"><span class="string">              dtype='datetime64[ns]', freq='C')  # freq="C'는 'CustomBusinessDay'를 의미</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line">np.busday_count(</span><br><span class="line">  <span class="string">'2020-10-01'</span>, <span class="string">'2020-10-31'</span>,</span><br><span class="line">  weekmask=TDay.weekmask,</span><br><span class="line">  holidays=TDay.holidays</span><br><span class="line">)</span><br><span class="line"><span class="string">""" 공휴일을 제외한 두 일자 간 영업일수</span></span><br><span class="line"><span class="string">19</span></span><br><span class="line"><span class="string">"""</span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>Post author:  </strong>Hwanghee Kim
+  </li>
+  <li class="post-copyright-link">
+    <strong>Post link: </strong>
+    <a href="https://hwangheek.github.io/2020/pandas-custom-businessday-from-krx/" title="KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기">https://hwangheek.github.io/2020/pandas-custom-businessday-from-krx/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice:  </strong>All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> unless stating additionally.
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Python/" rel="tag"># Python</a>
+              <a href="/tags/System-Trading/" rel="tag"># System Trading</a>
+              <a href="/tags/Pandas/" rel="tag"># Pandas</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/pandas-tick-data/" rel="prev" title="Pandas를 이용하여 틱데이터 가공하기">
+      <i class="fa fa-chevron-left"></i> Pandas를 이용하여 틱데이터 가공하기
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-Introduction"><span class="nav-text">0. Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-pandas의-AbstractHolidayCalendar"><span class="nav-text">1. pandas의 AbstractHolidayCalendar</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-pandas의-Holiday를-사용하여-정의하기"><span class="nav-text">1.1. pandas의 Holiday를 사용하여 정의하기</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-DB-정보를-사용하여-정의하기"><span class="nav-text">1.2. DB 정보를 사용하여 정의하기</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-한국거래소-휴장일-정보를-크롤링하여-정의하기"><span class="nav-text">1.3. 한국거래소 휴장일 정보를 크롤링하여 정의하기</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-pandas의-CustomBusinessDay"><span class="nav-text">2. pandas의 CustomBusinessDay</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Hwanghee Kim</p>
+  <div class="site-description" itemprop="description">ㅎㅎㅋ의 개인 연구실</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">카테고리</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">태그</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="external nofollow noopener noreferrer" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hwanghee Kim</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="external nofollow noopener noreferrer" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="external nofollow noopener noreferrer" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://blog-w5rrs5lidd.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://hwangheek.github.io/2020/pandas-custom-businessday-from-krx/";
+    this.page.identifier = "2020/pandas-custom-businessday-from-krx/";
+    this.page.title = "KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://blog-w5rrs5lidd.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
