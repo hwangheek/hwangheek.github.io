@@ -361,7 +361,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2020-11-20 15:48:29" itemprop="dateModified" datetime="2020-11-20T15:48:29+09:00">2020-11-20</time>
+                <time title="Updated at: 2020-11-20 15:49:24" itemprop="dateModified" datetime="2020-11-20T15:49:24+09:00">2020-11-20</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -398,13 +398,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="introduction">Introduction</h1>
-<p>Python으로 코드를 짤 때, 로그를 띄우는 방법으로 <code>print('[*] Message')</code>를 정말 많이 써 왔습니다. 군더더기 없고, 유연하고, dependency 없이 아무 위치에나 넣을 수 있다는 점이 좋았습니다. '좋았다' 보다는 '편했다' 혹은 '귀찮았다'가 더 적절한 것 같습니다. 혼자서 사용하는 프로그램을 짤 때는 exception 처리나 로그 처리에 신경을 쓰지 않아도 문제가 없었기 때문인 것 같습니다.</p>
-<p>이러한 방법은 문제가 많이 있습니다. 중요도에 따라서 로그를 분류할 수도 없을 뿐더러, 코드를 수정하지 않는 이상 로그를 컨트롤 할 수도 없습니다. 정말로 print 되어야 하는 내용과 로그가 뒤섞여 버려서 화면이 지저분해지는 것도 문제입니다. <em>(Fang's coding note)</em> 가끔은 조용히 프로그램을 돌리고 싶을 때도 있고, 가끔은 verbose 해지고 싶어질 때도 있잖아요?</p>
-<p align="center">
-<img src="/images/morpheus_logging.jpg" title="fig:" alt="Better Logging">
-</p>
-<p><strong>Python에서는 <code>logging</code> 모듈을 기본적으로 제공합니다.</strong> 이제 <code>print('[*] ...')</code>만 사용하지 말고, <code>logging</code> 모듈을 통해 멋지고 깔끔한 로깅을 해봅시다. 이번 포스트를 통해 Python에서 제공하는 <code>logging</code> 모듈을 어떻게 사용하는지 알아보도록 하겠습니다. 또한, '좋은 로그 처리 방법'이 어떤 성질을 지니고 있을 지에 대한 고민도 해보겠습니다.</p>
+          <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>Python으로 코드를 짤 때, 로그를 띄우는 방법으로 <code>print(&#39;[*] Message&#39;)</code>를 정말 많이 써 왔습니다. 군더더기 없고, 유연하고, dependency 없이 아무 위치에나 넣을 수 있다는 점이 좋았습니다. ‘좋았다’ 보다는 ‘편했다’ 혹은 ‘귀찮았다’가 더 적절한 것 같습니다. 혼자서 사용하는 프로그램을 짤 때는 exception 처리나 로그 처리에 신경을 쓰지 않아도 문제가 없었기 때문인 것 같습니다.</p>
+<p>이러한 방법은 문제가 많이 있습니다. 중요도에 따라서 로그를 분류할 수도 없을 뿐더러, 코드를 수정하지 않는 이상 로그를 컨트롤 할 수도 없습니다. 정말로 print 되어야 하는 내용과 로그가 뒤섞여 버려서 화면이 지저분해지는 것도 문제입니다. <em>(Fang’s coding note)</em> 가끔은 조용히 프로그램을 돌리고 싶을 때도 있고, 가끔은 verbose 해지고 싶어질 때도 있잖아요?</p>
+<p align="center"><img src="/images/morpheus_logging.jpg" alt="Better Logging"></p>
+
+<p><strong>Python에서는 <code>logging</code> 모듈을 기본적으로 제공합니다.</strong> 이제 <code>print(&#39;[*] ...&#39;)</code>만 사용하지 말고, <code>logging</code> 모듈을 통해 멋지고 깔끔한 로깅을 해봅시다. 이번 포스트를 통해 Python에서 제공하는 <code>logging</code> 모듈을 어떻게 사용하는지 알아보도록 하겠습니다. 또한, ‘좋은 로그 처리 방법’이 어떤 성질을 지니고 있을 지에 대한 고민도 해보겠습니다.</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2019/python-logging/#more" rel="contents">
