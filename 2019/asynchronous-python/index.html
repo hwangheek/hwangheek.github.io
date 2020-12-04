@@ -27,7 +27,7 @@
 <meta property="og:locale" content="ko">
 <meta property="og:image" content="https://hwangheek.github.io/images/why_so_async.png">
 <meta property="og:image" content="https://hwangheek.github.io/images/parallelism_concurrency.png">
-<meta property="og:updated_time" content="2020-12-04T04:28:08.260Z">
+<meta property="og:updated_time" content="2020-12-04T04:58:21.206Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="비동기적으로 Python 다루기">
 <meta name="twitter:description" content="0. 안녕, 비동기! Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다...만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐">
@@ -193,7 +193,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2020-12-04 13:28:08" itemprop="dateModified" datetime="2020-12-04T13:28:08+09:00">2020-12-04</time>
+                <time title="Updated at: 2020-12-04 13:58:21" itemprop="dateModified" datetime="2020-12-04T13:58:21+09:00">2020-12-04</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -316,7 +316,11 @@
 <blockquote><p><strong>Concurrency</strong> is about <em>dealing with lots of things at once</em> <strong>Parallelism</strong> is about <em>doing lots of things at once</em></p>
 <footer><strong>Skrew Everything</strong><cite><a href="https://medium.com/from-the-scratch/dont-be-confused-between-concurrency-and-parallelism-eac8e703943a" rel="external nofollow noopener noreferrer" target="_blank">Don't be confused between Concurrency and Parallelism</a></cite></footer></blockquote>
 <p>두 용어는 다른 차원의 개념입니다. <strong>Parallelism</strong>은 하나의 작업이 여러개의 작은 작업들로 나뉘어져 물리적으로 동시에 진행되는 것을 말합니다. 여러개의 CPU가 동시에 돌아가는 것을 생각하면 되겠습니다. 반면, <strong>Concurrency</strong>는 여러 작업들이 같은 순간에 (<strong>physically or logically</strong>) 처리되고 있는 상태입니다.</p>
-<p>이 정의를 통해 알 수 있는 사실이 몇 가지 있습니다. 1. Single Thread 환경에서도 concurrent한 작업을 수행할 수 있다. (CPU time-slicing 혹은 Application level의 scheduling을 활용) 2. Parallel한 작업은 Concurrent하다. 그 반대는 항상 성립하지 않는다. <em>(Skrew Everything)</em></p>
+<p>이 정의를 통해 알 수 있는 사실이 몇 가지 있습니다.</p>
+<ol type="1">
+<li>Single Thread 환경에서도 concurrent한 작업을 수행할 수 있다. (CPU time-slicing 혹은 Application level의 scheduling을 활용)</li>
+<li>Parallel한 작업은 Concurrent하다. 그 반대는 항상 성립하지 않는다. <em>(Skrew Everything)</em></li>
+</ol>
 <p><strong>Python의 coroutine들은 concurrent하게 실행됩니다. Parallel하게 돌아가는 것이 아닙니다.</strong> 앞서 이야기 했듯이, Python은 GIL로 인하여 한번에 하나의 thread만 실행이 됩니다. 따라서, 위에서 이야기 했던 asynchronous한 coroutine들은 'One process, One thread' 환경에서 concurrent하게 돌아가는 것입니다. 아래는 <a href="https://medium.com/from-the-scratch/dont-be-confused-between-concurrency-and-parallelism-eac8e703943a" rel="external nofollow noopener noreferrer" target="_blank">Skrew Everthing님의 포스트</a>에 삽입된 Parallelism과 Concurrency without Parallelism을 시각화한 그림입니다. Python의 GIL을 고려하였을 때, 그림의 아랫부분에 있는 <em>Concurrency without Parallelism</em>이 Python에서의 coroutine들의 동작 형태와 유사하다고 볼 수 있습니다.</p>
 <p align="center">
 <img src="/images/parallelism_concurrency.png">
