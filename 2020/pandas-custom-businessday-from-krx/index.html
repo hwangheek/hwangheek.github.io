@@ -26,7 +26,7 @@
 <meta property="og:description" content="0. Introduction Python을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.  조금">
 <meta property="og:locale" content="ko">
 <meta property="og:image" content="https://hwangheek.github.io/images/2020-10-say-datetime-one-more-time.jpg">
-<meta property="og:updated_time" content="2020-12-03T23:45:47.514Z">
+<meta property="og:updated_time" content="2020-12-04T04:24:36.669Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기">
 <meta name="twitter:description" content="0. Introduction Python을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.  조금">
@@ -192,7 +192,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2020-12-04 08:45:47" itemprop="dateModified" datetime="2020-12-04T08:45:47+09:00">2020-12-04</time>
+                <time title="Updated at: 2020-12-04 13:24:36" itemprop="dateModified" datetime="2020-12-04T13:24:36+09:00">2020-12-04</time>
               </span>
 
           
@@ -224,7 +224,9 @@
 <p>Python을 사용해서 금융 시계열 분석을 하다보면, datetime과 관련한 처리가 까다로운 경우가 많습니다. 대표적으로, 휴일 및 공휴일 등을 계산하는 경우가 있습니다. Python pandas 라이브러리에 business day 개념이 있기는 하지만 (기본적으로는) 주말을 제외한 공휴일을 제대로 고려하지 못합니다.</p>
 <p><img src="/images/2020-10-say-datetime-one-more-time.jpg" class="datetime anger" width="500" title="datetime anger"></p>
 <p>조금 찾아보니, pandas에서 이러한 문제를 관리할 수 있는 방법이 있었습니다. 본 포스팅은 해당 내용을 공부하며 정리한 글 입니다. 글의 내용 중 잘못 된 부분이 있는 경우, 피드백을 주시면 감사하겠습니다. :)</p>
-<p>&lt;!-- more --&gt;</p>
+<p>
+<a id="more"></a>
+</p>
 <hr>
 <h1>1. pandas의 <code>AbstractHolidayCalendar</code></h1>
 <h2>1.1. pandas의 <code>Holiday</code>를 사용하여 정의하기</h2>
