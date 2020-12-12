@@ -27,7 +27,7 @@
 <meta property="og:locale" content="ko">
 <meta property="og:image" content="https://hwangheek.github.io/images/why_so_async.png">
 <meta property="og:image" content="https://hwangheek.github.io/images/parallelism_concurrency.png">
-<meta property="og:updated_time" content="2020-12-04T04:58:21.206Z">
+<meta property="og:updated_time" content="2020-12-12T03:00:55.290Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="비동기적으로 Python 다루기">
 <meta name="twitter:description" content="0. 안녕, 비동기! Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다...만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐">
@@ -193,7 +193,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2020-12-04 13:58:21" itemprop="dateModified" datetime="2020-12-04T13:58:21+09:00">2020-12-04</time>
+                <time title="Updated at: 2020-12-12 12:00:55" itemprop="dateModified" datetime="2020-12-12T12:00:55+09:00">2020-12-12</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -295,7 +295,7 @@
 <p><code>gen.send('Hello')</code>로 인해 generator의 실행이 재개 될 경우, <code>yield msg_first</code> 신택스 자체가 <code>'Hello'</code>로 처리됩니다. 이처럼, 실행이 멈춰있는 generator object의 <code>send</code> method를 호출함으로써, generator에게 데이터를 전달할 수 있습니다.</p>
 <p>다른 하나는, <strong>generator에서 다른 generator를 yield하는 기능</strong>입니다. 이는 <a href="https://www.python.org/dev/peps/pep-0380/" rel="external nofollow noopener noreferrer" target="_blank">PEP380 (Syntax for Delegating to a Subgenerator)</a>에 명시되어있습니다. 아래의 예시를 보겠습니다.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">inner</span><span class="params">()</span>:</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">'INNER'</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">'GENERATOR'</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">'YEAH!'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">outer</span><span class="params">()</span>:</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">'Get ready for ...'</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="keyword">from</span> inner()</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>gen = outer()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>print(next(gen))</span><br><span class="line">Get ready <span class="keyword">for</span> ...</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>print(next(gen), next(gen), next(gen))</span><br><span class="line">INNER GENERATOR YEAH!</span><br></pre></td></tr></table></figure>
-<p>라인 8과 같이 <code>yield from</code> 키워드를 사용하여 generator 내부에서도 다른 generator를 생성하여 yield를 사용할 수 있습니다. 즉, <code>yield from inner()</code>는 <code>from x from inner(): yield x</code>와 같은 역할을 하는 셈입니다. PEP380에 따르면, 이 신택스는 Python 3.3부터 추가되었다고 합니다. (따라서, Python 2.7에서 위의 예시를 실행하면 <code>yield from</code> 신택스를 이해하지 못하고 에러가 발생합니다.)</p>
+<p>라인 8과 같이 <code>yield from</code> 키워드를 사용하여 generator 내부에서도 다른 generator를 생성하여 yield를 사용할 수 있습니다. 즉, <code>yield from inner()</code>는 <code>for x from inner(): yield x</code>와 같은 역할을 하는 셈입니다. PEP380에 따르면, 이 신택스는 Python 3.3부터 추가되었다고 합니다. (따라서, Python 2.7에서 위의 예시를 실행하면 <code>yield from</code> 신택스를 이해하지 못하고 에러가 발생합니다.)</p>
 <p>위에서 정의된 <code>echo_me</code>와 <code>inner</code>, <code>outer</code>는 일종의 coroutine입니다. (실행을 일시정지하고 재개할 수 있는 entry points들이 존재하기 때문입니다.) Generator를 이용하여 만들었으므로, 'generator based coroutine'라고 생각할 수 있겠습니다. (여기까지는 generator와 coroutine이라는 용어의 구분이 명확하지 않습니다.)</p>
 <p>이러한 generator based coroutine들이 값을 yield 할 경우, 항상 자신의 caller에게로 실행의 순서가 넘어가게 됩니다. 이러한 coroutine을 <strong>'Asymmetric coroutine'</strong>이라고 부르기도 합니다. 이와 구분되는 개념인 'Symmetric coroutine'의 경우에는 하나의 coroutine에서 값을 yield할 때, 다른 coroutine에게 실행 순서를 넘겨줄 수 있는 통제권을 가지고 있습니다. 무조건 자신의 caller에게 실행 순서를 넘겨주어야 하는 asymmetric coroutine과는 다르죠. <em>(Moura)</em></p>
 <h2 id="asyncio-module">3-2. asyncio Module</h2>
