@@ -8,6 +8,14 @@
     </url>
 
     <url>
+        <loc>https://hwangheek.github.io/2020/pandas-tick-data/</loc>
+        <lastmod>2021-01-04T05:39:47.200Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://hwangheek.github.io/2019/asynchronous-python/</loc>
         <lastmod>2020-12-12T03:00:55.290Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -18,14 +26,6 @@
     <url>
         <loc>https://hwangheek.github.io/2019/python-logging/</loc>
         <lastmod>2020-12-04T04:26:49.413Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://hwangheek.github.io/2020/pandas-tick-data/</loc>
-        <lastmod>2020-12-04T04:25:17.864Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
