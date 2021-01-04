@@ -23,10 +23,6 @@ logger.addHandler(_h)
 XINGAPI_PATH = '/eBEST/xingAPI/'
 
 
-
-""" Utilities
-"""
-
 def build_meta_res():
     """ res 파일들의 meta data
         
@@ -106,54 +102,21 @@ def build_meta_res():
     
     return meta
 
-def build_meta_stock():
-    """ KOSPI, KOSDAQ 주식종목
-        
-        xingAPI의 t8430(주식종목조회) 요청을 통해 주식 종목 정보를 불러온다.
-        
-        Example
-        -------
-        >>> build_meta_stock()
-        {
-            '000020': {
-                'gubun': '1',
-                'hname': '동화약품',
-                'etfgubun': '0',
-                'shcode': '000020',
-                'expcode': 'KR7000020008',
-                'dnlmtprice': 6580,
-                'jnilclose': 9400,
-                'memedan': '00001',
-                'recprice': 9400,
-                'uplmtprice': 12200
-            },
-            ...
-        }
-    """
-    stock = query('t8430', {'gubun':'0'}).get('t8430OutBlock', [])
-    return dict(zip(
-        map(lambda s: s['shcode'], stock),
-        stock
-    ))
 
 meta_res = build_meta_res()
-meta_stock = {}
 
-""" Session
-"""
+
 class _SessionHandler:
     def OnLogin(self, code, msg):
         """ 서버와의 로그인이 끝나면 실행되는 함수
-            
+
             @arg code[str] 서버에서 받은 메시지 코드
             @arg msg[str] 서버에서 받은 메시지 정보
         """
-        global meta_stock
         self.waiting = False
     
         if code == '0000':
             logger.info('[*] 로그인 성공')
-            meta_stock = build_meta_stock()
         else:
             logger.warning('[*] 로그인 실패 : {}'.format(msg))
     
@@ -216,7 +179,7 @@ def accounts():
 
 def account(index=0):
     """ 계좌번호
-    
+
         @arg index[*int=0] 불러올 계좌의 순번
     """
     return _session.GetAccountList(index)
@@ -267,7 +230,7 @@ class _QueryHandler:
         """ 요청 데이터 도착 Listener
             
             self.GetFieldData(...)를 통해 전송받은 데이터 확인이 가능하다.
-            
+
             @arg res[str] 요청 res 파일명
         """
         # decompress가 필요한 경우 압축해제
@@ -291,7 +254,7 @@ class _QueryHandler:
 
 def query(res, send, cont=False, timeout=10):
     """ Query 요청
-    
+
         @arg res[str]`t1102` 사용할 res 파일명
         @arg send[dict] 전송할 데이터
             {
@@ -368,153 +331,44 @@ def query(res, send, cont=False, timeout=10):
     
     return _query.response
 
+class _RealtimeHandler:
+    def OnReceiveRealData(self, res):
+        response = {}
+        for field in meta_res[res]['output']['OutBlock']['fields']:
+            response[field['name']] = self.GetFieldData('OutBlock', field['name'])
 
+        self.callback(res, response)
 
-""" Wrapper Functions
-"""
-
-def transactions_tick(shcode, interval=1, sdate=None, edate=None):
-    edate = edate or datetime.now().strftime('%Y%m%d')
-    sdate = sdate or edate
-    
-    data = []
-    cts_date = ' '
-    cts_time = ' '
-    
-    while True:
-        response = query('t8411', {
-            'shcode': shcode,
-            'ncnt': interval,
-            'qrycnt': 2000,
-            'nday': '0',
-            'sdate': sdate,
-            'edate': edate,
-            'cts_date': cts_date,
-            'cts_time': cts_time,
-            'comp_yn': 'Y'
-        }, len(data) > 0)
+class Realtime:
+    def __init__(self, res, callback):
+        self._res = res
+        self._instance = DispatchWithEvents('XA_DataSet.XAReal', _RealtimeHandler)
+        self._instance.LoadFromResFile(f'/Res/{res}.res')
+        self._instance.callback = callback
         
-        data = response['t8411OutBlock1'] + data
-        cts_date = response['t8411OutBlock']['cts_date']
-        cts_time = response['t8411OutBlock']['cts_time']
-        if not (cts_date or cts_time):
-            break
+        self.subscribed_keys = []
     
-    data = pd.DataFrame(data)
-    data.index = (data['date'] + data['time']).apply(lambda t: datetime.strptime(t, '%Y%m%d%H%M%S').astimezone(pytz.timezone('Asia/Seoul')))
-    
-    data = data.rename(columns={'jdiff_vol': 'volumn'})
-    data = data[['open', 'high', 'low', 'close', 'volumn', 'jongchk', 'rate']]
-
-    return data
-
-def transactions_min(shcode, interval=1, sdate=None, edate=None):
-    edate = edate or datetime.now().strftime('%Y%m%d')
-    sdate = sdate or edate
-    
-    data = []
-    cts_date = ' '
-    cts_time = ' '
-    
-    while True:
-        response = query('t8412', {
-            'shcode': shcode,
-            'ncnt': interval,
-            'qrycnt': 2000,
-            'nday': '0',
-            'sdate': sdate,
-            'edate': edate,
-            'cts_date': cts_date,
-            'cts_time': cts_time,
-            'comp_yn': 'Y'
-        }, len(data) > 0)
+    def subscribe(self, key=None):
+        if key in self.subscribed_keys:
+            print(f'{self._res}는 이미 {key} 데이터를 수신 중입니다.')
+            return None
         
-        data = response['t8412OutBlock1'] + data
-        cts_date = response['t8412OutBlock']['cts_date']
-        cts_time = response['t8412OutBlock']['cts_time']
-        if not (cts_date or cts_time):
-            break
-    
-    if len(data) == 0:
-        return None
-    
-    data = pd.DataFrame(data)
-    data.index = (data['date'] + data['time']).apply(lambda t: datetime.strptime(t, '%Y%m%d%H%M%S').astimezone(pytz.timezone('Asia/Seoul')))
-    
-    data = data.rename(columns={'jdiff_vol': 'volumn'})
-    data = data[['open', 'high', 'low', 'close', 'volumn', 'value', 'jongchk', 'rate']]
-    
-    return data
-
-def transactions_day(shcode, interval=1, sdate=None, edate=None):
-    edate = edate or datetime.now().strftime('%Y%m%d')
-    sdate = sdate or (datetime.now()-timedelta(31)).strftime('%Y%m%d')
-    
-    data = []
-    cts_date = ' '
-    
-    while True:
-        response = query('t8413', {
-            'shcode': shcode,
-            'gubun': '2',
-            'qrycnt': 2000,
-            'sdate': sdate,
-            'edate': edate,
-            'cts_date': cts_date,
-            'comp_yn': 'Y'
-        }, len(data) > 0)
+        if key:
+            self._instance.SetFieldData('InBlock', meta_res[self._res]['input']['InBlock']['fields'][0]['name'], key)
+        self._instance.AdviseRealData()
         
-        data = response['t8413OutBlock1'] + data
-        cts_date = response['t8413OutBlock']['cts_date']
-        if not cts_date:
-            break
+        self.subscribed_keys.append(key)
     
-    data = pd.DataFrame(data)
-    data.index = (data['date'] + '180000').apply(lambda t: datetime.strptime(t, '%Y%m%d%H%M%S').astimezone(pytz.timezone('Asia/Seoul')))
+    def unsubscirbe(self, key=None):
+        if key is None:
+            self._instance.UnadviseRealData()
+        else:
+            if key not in self.subscribed_keys:
+                raise ValueError(f'{self._res}는 {key} 데이터를 수신하고 있지 않습니다.')
+            self._instnace.UnadviseRealDataWithKey(key)
     
-    data = data.rename(columns={'jdiff_vol': 'volumn'})
-    data = data[['open', 'high', 'low', 'close', 'volumn', 'value', 'jongchk', 'rate']]
-    
-    return data
-
-def transactions(shcode, interval, sdate=None, edate=None):
-    """ 거래내역
-    
-        t8411 : 주식챠트(틱/n틱)
-        t8412 : 주식챠트(N분)
-        t8413 : 주식챠트(일주월)
-        t1305 : 기간별 주가 : 일주월
-        t4201 : 주식차트(종합) - 틱/분/일/주/월
-    
-        @arg shcode[str]`000030`
-        @arg interval[*str='5min']
-            (t)ick, (M)in, (d)ay, (w)eek, (m)onth
-        @arg sdate[*str or datetime.date or datetime.datetime]
-        @arg edate[*str or datetime.date or datetime.datetime]
-    """
-    interval = (interval
-        .replace('tick', 't')
-        .replace('Min', 'M')
-        .replace('day', 'd')
-        .replace('week', 'w')
-        .replace('month', 'm'))
-    
-    if isinstance(sdate, date):
-        sdate = sdate.strftime('%Y%m%d')
-    
-    if isinstance(edate, date):
-        edate = edate.strftime('%Y%m%d')
-    
-    if interval[-1] == 't':
-        interval = re.match(r'(\d*)t', interval).group(1) or 1
-        return transactions_tick(shcode, interval, sdate, edate)
-    elif interval[-1] == 'M':
-        interval = re.match(r'(\d*)M', interval).group(1) or 1
-        return transactions_min(shcode, interval, sdate, edate)
-    elif interval[-1] == 'd':
-        interval = re.match(r'(\d*)d', interval).group(1) or 1
-        return transactions_day(shcode, interval, sdate, edate)
-    elif interval[-1] in ['w', 'm']:
-        raise NotImplementedError
-    else:
-        raise ValueError('알 수 없는 interval 타입입니다.')
+    @staticmethod
+    def listen(delay=.01):
+        while True:
+            PumpWaitingMessages()
+            time.sleep(delay)
