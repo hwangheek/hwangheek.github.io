@@ -159,6 +159,94 @@
   
   
   <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://hwangheek.github.io/2021/black-litterman/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Hwanghee Kim">
+      <meta itemprop="description" content="ㅎㅎㅋ의 개인 연구실">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ㅎㅎㅋ">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/black-litterman/" class="post-title-link" itemprop="url">Python으로 블랙리터만 (Black-Litterman) 모델 이해하기</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">작성일</span>
+              
+
+              <time title="Post created: 2021-02-16 18:09:22 / Updated at: 18:10:22" itemprop="dateCreated datePublished" datetime="2021-02-16T18:09:22+09:00">2021-02-16</time>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2021/black-litterman/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/black-litterman/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="0-Introduction"><a href="#0-Introduction" class="headerlink" title="0. Introduction"></a>0. Introduction</h1><p>금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$), 얼마만큼($w$) 가지고 있어야 하는지에 대한 판단을 내려야 합니다.</p>
+<p>포트폴리오 구성과 관련된 모델 중 가장 잘 알려진 이론은 <a href="https://www.investopedia.com/terms/m/meanvariance-analysis.asp" rel="external nofollow noopener noreferrer" target="_blank">Mean-Variance Optimization Portfolio</a>일 것입니다. 해당 모델의 로직은 논리적이고 직관적이지만, 몇 가지 문제점들이 있습니다.</p>
+<ol>
+<li>입력 데이터의 작은 변화에도 도출되는 포트폴리오 구성비중이 크게 변합니다.</li>
+<li>몇 개의 자산에 비중이 쏠리는 코너 솔루션이 나타나는 경우가 있습니다.</li>
+<li>투자자가 가지고 있는 정보를 녹여낼 수 있는 방법 없습니다. 따라서, 시장에 대한 견해가 다른 매니저일지라도 (같은 hyperparameter를 가지고 있는 경우) 같은 MVO 포트폴리오를 얻게 됩니다.</li>
+</ol>
+<p>위 문제점들은 실제 운용을 할 때 걸림돌이 됩니다. (ex. 높은 turnover ratio, 규제위반, 모델에 들어가지 않은 추가적인 정보 반영 불가 등) 이러한 문제점들을 해결하기 위해, 골드만삭스의 Fischer Black과 Robert Litterman이 1990년에 개발하고 1992년에 출판한 포트폴리오 최적화 방법론이 Black-Litterman Model입니다.</p>
+<p>본 포스팅은 Black-Litterman Portfolio Model을 이해하고, Python으로 이를 구현해보는 과정을 정리해 놓은 글입니다. 내용에 문제나 개선점이 있는 경우, 피드백을 주시면 감사하겠습니다! 😀</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/black-litterman/#more" rel="contents">
+                더 읽어보기 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="ko">
     <link itemprop="mainEntityOfPage" href="https://hwangheek.github.io/2021/neat-xingapi-with-python/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -184,7 +272,7 @@
               <span class="post-meta-item-text">작성일</span>
               
 
-              <time title="Post created: 2021-01-04 18:38:14 / Updated at: 19:37:44" itemprop="dateCreated datePublished" datetime="2021-01-04T18:38:14+09:00">2021-01-04</time>
+              <time title="Post created: 2021-01-04 18:38:14 / Updated at: 20:13:14" itemprop="dateCreated datePublished" datetime="2021-01-04T18:38:14+09:00">2021-01-04</time>
             </span>
 
           
@@ -363,7 +451,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2021-02-15 09:24:50" itemprop="dateModified" datetime="2021-02-15T09:24:50+09:00">2021-02-15</time>
+                <time title="Updated at: 2021-02-15 09:33:48" itemprop="dateModified" datetime="2021-02-15T09:33:48+09:00">2021-02-15</time>
               </span>
 
           
@@ -391,9 +479,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="introduction">0. Introduction</h1>
-<p>체결 데이터(틱데이터)를 사용할 때, 데이터가 지나치게 raw해서 생기는 난감한 부분들이 많습니다. 이를 해결하기 위해 "분봉"이나 "일봉"처럼, 일정한 시간을 기준으로 체결내역을 grouping하는 전처리 방법이 가장 많이 사용되는 것 같습니다. 이러한 방법의 장단점은 무엇일까요? 혹시 다른 방법은 없을까요? 어떻게 구현을 해야 할까요?</p>
-<p><strong>Marcos Lopez de Prado의 저서 <em>Advances in Financial Machine Learning</em></strong>에 위 질문들에 대한 답변이 정리가 잘 되어있습니다. <strong>이번 포스팅은 해당 서적의 "2.3 Financial Data Structures: Bars" 챕터를 공부하며 이해한 내용을 정리한 내용입니다.</strong> 워낙 유명한 저서인지라, 책의 내용에 대한 구현을 정리해놓은 <a href="https://github.com/hudson-and-thames/mlfinlab" rel="external nofollow noopener noreferrer" target="_blank">github repo</a>도 있습니다. 다만, 모듈화를 위해 로직이 흩어져있어서 이해하기가 쉽지 않아, Python pandas를 사용하여 직접 구현을 해보았습니다.</p>
+          <h1 id="0-Introduction"><a href="#0-Introduction" class="headerlink" title="0. Introduction"></a>0. Introduction</h1><p>체결 데이터(틱데이터)를 사용할 때, 데이터가 지나치게 raw해서 생기는 난감한 부분들이 많습니다. 이를 해결하기 위해 “분봉”이나 “일봉”처럼, 일정한 시간을 기준으로 체결내역을 grouping하는 전처리 방법이 가장 많이 사용되는 것 같습니다. 이러한 방법의 장단점은 무엇일까요? 혹시 다른 방법은 없을까요? 어떻게 구현을 해야 할까요?</p>
+<p><strong>Marcos Lopez de Prado의 저서 <em>Advances in Financial Machine Learning</em></strong>에 위 질문들에 대한 답변이 정리가 잘 되어있습니다. <strong>이번 포스팅은 해당 서적의 “2.3 Financial Data Structures: Bars” 챕터를 공부하며 이해한 내용을 정리한 내용입니다.</strong> 워낙 유명한 저서인지라, 책의 내용에 대한 구현을 정리해놓은 <a href="https://github.com/hudson-and-thames/mlfinlab" rel="external nofollow noopener noreferrer" target="_blank">github repo</a>도 있습니다. 다만, 모듈화를 위해 로직이 흩어져있어서 이해하기가 쉽지 않아, Python pandas를 사용하여 직접 구현을 해보았습니다.</p>
 <p>포스팅의 내용 혹은 코드에 개선이 필요한 경우, 피드백을 주시면 감사하겠습니다. :)</p>
           <!--noindex-->
             <div class="post-button">
@@ -678,7 +765,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/archives">
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">포스트</span>
         </a>
       </div>
@@ -689,7 +776,7 @@
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">태그</span></a>
       </div>
   </nav>
