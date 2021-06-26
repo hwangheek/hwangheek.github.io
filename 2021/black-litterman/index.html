@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="ㅎㅎㅋ">
 <meta property="og:description" content="0. Introduction금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$">
 <meta property="og:locale" content="ko">
-<meta property="og:updated_time" content="2021-06-26T08:26:14.630Z">
+<meta property="og:updated_time" content="2021-06-26T08:28:41.515Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Python으로 블랙리터만 (Black-Litterman) 모델 이해하기">
 <meta name="twitter:description" content="0. Introduction금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$">
@@ -191,7 +191,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2021-06-26 17:26:14" itemprop="dateModified" datetime="2021-06-26T17:26:14+09:00">2021-06-26</time>
+                <time title="Updated at: 2021-06-26 17:28:41" itemprop="dateModified" datetime="2021-06-26T17:28:41+09:00">2021-06-26</time>
               </span>
 
           
@@ -409,7 +409,10 @@
 <p>Outperform 할 것으로 예상되는 섹터들(IT, 통신서비스, 에너지)의 비중은 상향 조정되었고, underperform 할 것으로 예상되는 섹터들(유틸리티, 경기소비재, 필수소비재)의 비중은 하향 조정되었습니다. View에 포함된 자산 뿐만 아니라, 포함되지 않은 자산까지 비중이 전체적으로 조정된 것을 확인할 수 있습니다.</p>
 <hr>
 <h1 id="4-Dealing-with-Constraints"><a href="#4-Dealing-with-Constraints" class="headerlink" title="4. Dealing with Constraints"></a>4. Dealing with Constraints</h1><p>모델의 전체적인 프로세스를 진행하는 과정에서, 포트폴리오의 비중을 구하기 위하여 다음의 두 가지 스텝을 밟았습니다.</p>
-<p>1) Black-Litterman 모델을 통해 자산별 기대수익률($E[R]$)을 계산하고,<br>2) 해당 기대수익률을 기반으로 mean-variance optimization을 적용하여 새로운 비중($\hat{w}$)을 계산했습니다.</p>
+<ul>
+<li>Black-Litterman 모델을 통해 자산별 기대수익률($E[R]$)을 계산하고,</li>
+<li>해당 기대수익률을 기반으로 mean-variance optimization을 적용하여 새로운 비중($\hat{w}$)을 계산했습니다.</li>
+</ul>
 <p>본 포스트에서는 제약조건이 없는 mean-variance optimization(unconstrained maximization optimization process)을 가정하였습니다. ($\hat{w} = (\Sigma^{-1}E[R])/(1^T\Sigma^{-1}E[R])$) 만약 포트폴리오 구성 시 제약조건(보유비중, 리스크, 베타, long-only portfolio 등)이 있는 경우, 위의 (2)번 프로세스에 제약조건을 더해 mean-variance optimization을 진행하면 되겠습니다.</p>
 <hr>
 <p><strong>(🔨 포스트 내용을 업데이트 하는 중 입니다! 🔨)</strong></p>
