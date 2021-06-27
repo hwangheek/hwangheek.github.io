@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="ㅎㅎㅋ">
 <meta property="og:description" content="0. Introduction금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$">
 <meta property="og:locale" content="ko">
-<meta property="og:updated_time" content="2021-06-26T08:28:41.515Z">
+<meta property="og:updated_time" content="2021-06-27T06:41:08.004Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Python으로 블랙리터만 (Black-Litterman) 모델 이해하기">
 <meta name="twitter:description" content="0. Introduction금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$">
@@ -191,7 +191,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Updated at: 2021-06-26 17:28:41" itemprop="dateModified" datetime="2021-06-26T17:28:41+09:00">2021-06-26</time>
+                <time title="Updated at: 2021-06-27 15:41:08" itemprop="dateModified" datetime="2021-06-27T15:41:08+09:00">2021-06-27</time>
               </span>
 
           
@@ -303,7 +303,7 @@
 <h2 id="2-4-lambda-Risk-Aversion-Coefficient"><a href="#2-4-lambda-Risk-Aversion-Coefficient" class="headerlink" title="2.4. $\lambda$ : Risk Aversion Coefficient"></a>2.4. $\lambda$ : Risk Aversion Coefficient</h2><p>Reverse optimization process에서, 투자자가 낮은 변동성을 위하여 trade-off 할 수 있는 수익률 수준을 나타내는 상수로써, 일종의 scaling factor 역할을 합니다. 즉, $\lambda$가 클수록, implied returns ($\Pi$) 값이 커지게 됩니다. 값을 설정하는 방법은 자료에 따라 상이하지만, 얼추 다음과 같이 정리할 수 있습니다.</p>
 <ul>
 <li><strong>방법 1</strong> : <code>2.15</code> ~ <code>2.65</code> 사이의 값 (BLM 관련 연구자료들의 추천 결과 값)</li>
-<li><strong>방법 2</strong> : $\frac{E(R_m)-R_f}{\sigma^2_m}$ (시가총액가중 포트폴리오의 sharpe ratio)</li>
+<li><strong>방법 2</strong> : $\frac{E(R_m)-R_f}{\sigma^2_m}$ (시가총액가중 포트폴리오의 평균 초과수익률 / 분산)</li>
 </ul>
 <p>본 포스팅에서는 두 번째 방법을 사용하도록 하겠습니다.</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>expected_portfolio_excess_return = monthly_excess_returns.mean().multiply(w_mkt).sum()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>portfolio_variance = w_mkt.dot(Sigma).dot(w_mkt)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>lambd = expected_portfolio_excess_return / portfolio_variance</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>lambd</span><br><span class="line"><span class="number">1.4956952957871978</span></span><br></pre></td></tr></table></figure>
