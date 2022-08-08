@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:300,300italic,400,400italic,700,700italic%7CNanum+Gothic+Coding:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hwangheek.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":false,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="0. Introduction금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python으로 블랙리터만 (Black-Litterman) 모델 구현하기">
+<meta property="og:url" content="https://hwangheek.github.io/2021/black-litterman/index.html">
+<meta property="og:site_name" content="ㅎㅎㅋ">
+<meta property="og:description" content="0. Introduction금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:image" content="https://hwangheek.github.io/images/2021-02-black-litterman-result.png">
+<meta property="article:published_time" content="2021-02-16T09:09:22.000Z">
+<meta property="article:modified_time" content="2022-07-23T14:39:52.366Z">
+<meta property="article:author" content="Hwanghee Kim">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Portfolio Theory">
+<meta property="article:tag" content="Black-Litterman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hwangheek.github.io/images/2021-02-black-litterman-result.png">
+
+
+<link rel="canonical" href="https://hwangheek.github.io/2021/black-litterman/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"ko","comments":true,"permalink":"https://hwangheek.github.io/2021/black-litterman/","path":"2021/black-litterman/","title":"Python으로 블랙리터만 (Black-Litterman) 모델 구현하기"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Python으로 블랙리터만 (Black-Litterman) 모델 구현하기 | ㅎㅎㅋ</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-132879183-1"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"UA-132879183-1","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ㅎㅎㅋ" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ㅎㅎㅋ</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">ㅎㅎㅋ의 개인 연구실</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-홈"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a></li><li class="menu-item menu-item-아카이브"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-Introduction"><span class="nav-text">0. Introduction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#0-References"><span class="nav-text">0. References</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Top-down"><span class="nav-text">1. Top-down</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Bottom-up-with-an-example"><span class="nav-text">2. Bottom-up (with an example)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-N-The-Number-of-Assets"><span class="nav-text">2.1. $N$ : The Number of Assets</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-Sigma-Covariance-Matrix-of-Asset-Excess-Returns"><span class="nav-text">2.2. $\Sigma$ : Covariance Matrix of Asset Excess Returns</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-Reverse-Optimization-Process"><span class="nav-text">2.3. Reverse Optimization Process</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-lambda-Risk-Aversion-Coefficient"><span class="nav-text">2.4. $\lambda$ : Risk Aversion Coefficient</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-Pi-Implied-Excess-Equilibrium-Return-Vector"><span class="nav-text">2.5. $\Pi$ : Implied Excess Equilibrium Return Vector</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-6-K-The-Number-of-Views"><span class="nav-text">2.6. $K$ : The Number of Views</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-7-Q-View-Vector"><span class="nav-text">2.7. $Q$ : View Vector</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-8-P-Picking-Matrix"><span class="nav-text">2.8. $P$ : Picking Matrix</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-9-tau-Scalar-%E2%80%9CTuning%E2%80%9D-Constant"><span class="nav-text">2.9. $\tau$ : Scalar “Tuning” Constant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-10-Omega-Uncertainty-Matrix-of-Views"><span class="nav-text">2.10. $\Omega$ : Uncertainty Matrix of Views</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Run-It-but-without-confidence-level-of-views"><span class="nav-text">3. Run It (but without confidence level of views)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-Considering-Confidence-Level-of-Views"><span class="nav-text">4. Considering Confidence Level of Views</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-Dealing-with-Constraints"><span class="nav-text">5. Dealing with Constraints</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Hwanghee Kim</p>
+  <div class="site-description" itemprop="description">ㅎㅎㅋ의 개인 연구실</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">카테고리</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">태그</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://www.linkedin.com/in/hwanghee-kim-66a628154/" title="LinkedIn → https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;hwanghee-kim-66a628154&#x2F;" rel="noopener" target="_blank"><i class="linkedin fa-fw"></i>LinkedIn</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdn.jsdelivr.net/npm/@creativecommons/vocabulary@2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://hwangheek.github.io/2021/black-litterman/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Hwanghee Kim">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ㅎㅎㅋ">
+      <meta itemprop="description" content="ㅎㅎㅋ의 개인 연구실">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Python으로 블랙리터만 (Black-Litterman) 모델 구현하기 | ㅎㅎㅋ">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Python으로 블랙리터만 (Black-Litterman) 모델 구현하기
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">작성일</span>
+
+      <time title="Post created: 2021-02-16 18:09:22" itemprop="dateCreated datePublished" datetime="2021-02-16T18:09:22+09:00">2021-02-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Updated at: 2022-07-23 23:39:52" itemprop="dateModified" datetime="2022-07-23T23:39:52+09:00">2022-07-23</time>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2021/black-litterman/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/black-litterman/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="0-Introduction"><a href="#0-Introduction" class="headerlink" title="0. Introduction"></a>0. Introduction</h1><p>금융 데이터를 이런저런 방식으로 분석해서 결과를 팀원들에게 공유하면, 반드시 나오는 중요한 질문이 하나 있습니다. 해당 결과를 어떻게 전략화 할 수 있냐는 겁니다. 분석 그 자체로써 의미있는 경우도 있지만, 결과적으로 (모델이 되었든 매니저가 되었든) 누군가는 포트폴리오 구성 및 운용 방식, 즉, 어떤 자산($X$)을 언제($t$), 얼마만큼($w$) 가지고 있어야 하는지에 대한 판단을 내려야 합니다.</p>
+<p>포트폴리오 구성과 관련된 모델 중 가장 잘 알려진 이론은 <a target="_blank" rel="noopener" href="https://www.investopedia.com/terms/m/meanvariance-analysis.asp">Mean-Variance Optimization Portfolio</a>일 것입니다. 해당 모델의 로직은 논리적이고 직관적이지만, 몇 가지 문제점들이 있습니다.</p>
+<ol>
+<li>입력 데이터의 작은 변화에도 도출되는 포트폴리오 구성비중이 크게 변합니다.</li>
+<li>몇 개의 자산에 비중이 쏠리는 코너 솔루션이 나타나는 경우가 있습니다.</li>
+<li>투자자가 가지고 있는 정보를 녹여낼 수 있는 방법 없습니다. 따라서, 시장에 대한 견해가 다른 매니저일지라도 (같은 hyperparameter를 가지고 있는 경우) 같은 MVO 포트폴리오를 얻게 됩니다.</li>
+</ol>
+<p>위 문제점들은 실제 운용을 할 때 걸림돌이 됩니다. (ex. 높은 turnover ratio, 규제위반, 모델에 들어가지 않은 추가적인 정보 반영 불가 등) 이러한 문제점들을 해결하기 위해, 골드만삭스의 Fischer Black과 Robert Litterman이 1990년에 개발하고 1992년에 발표한 포트폴리오 최적화 방법론이 Black-Litterman Model입니다.</p>
+<p>본 포스팅은 Black-Litterman Portfolio Model의 전체적인 프로세스를 이해하고, Python으로 이를 구현해보는 과정을 정리해 놓은 글입니다. 내용에 문제나 개선점이 있는 경우, 피드백을 주시면 감사하겠습니다! 😀</p>
+<span id="more"></span>
+
+<h2 id="0-References"><a href="#0-References" class="headerlink" title="0. References"></a>0. References</h2><ul>
+<li>Idzorek, T. “A step-by-step guide to the Black-Litterman model: Incorporating user-specified confidence levels.”, 2007<ul>
+<li>모델을 이해하는데 가장 많이 참조한 자료로, 포스팅의 notation들은 해당 자료를 따라갔습니다.</li>
+</ul>
+</li>
+<li>Stuart, J. “<a target="_blank" rel="noopener" href="https://pythonforfinance.net/2020/11/27/black-litterman-portfolio-allocation-model-in-python/#more-17887">Black-Litterman Portfolio Allocation Model in Python</a>“, 2020<ul>
+<li>Reverse Optimization Process를 이해하는데 큰 도움이 된 포스팅입니다.</li>
+</ul>
+</li>
+<li>Tim Wilding. “<a target="_blank" rel="noopener" href="https://quant.stackexchange.com/a/40943">Struggling with tau in Black-Litterman</a>“, 2018</li>
+<li>Walters, Jay. “The Factor Tau in the Black-Litterman Model”, 2010<ul>
+<li>$\tau$ 값을 이해하는데 도움이 됐었던 포스팅과 자료입니다.</li>
+</ul>
+</li>
+<li>Satchell, S. and Scowcroft, A. “A Demystification of the Black-Litterman model: Managing Quantitative and Traditional Construction.”, 2000</li>
+<li>Blamont, D. and Firoozy, N. “Asset Allocation Model.”, 2003</li>
+<li>Olsson, Sebastian &amp; Trollsten, Viktor. “The Black-Litterman Asset Allocation Model”, 2018</li>
+</ul>
+<!-- - https://ko.wikipedia.org/wiki/블랙-리터만_모형 (Intro)
+- [Python PyPortfolioOpt 모듈](https://pyportfolioopt.readthedocs.io/en/latest/BlackLitterman.html)
+- http://egloos.zum.com/timebird/v/7469432 (Shortcoming)
+- https://junyoru.tistory.com/102 (Shortcoming)
+- https://hudsonthames.org/portfolio-optimisation-with-portfoliolab-mean-variance-optimisation/ (MVO)
+-->
+
+
+<hr>
+<h1 id="1-Top-down"><a href="#1-Top-down" class="headerlink" title="1. Top-down"></a>1. Top-down</h1><p>모델을 자세히 살펴보기에 앞서서, 모델에 사용되는 수식을 살펴보면 다음과 같습니다.</p>
+<escape>
+\begin{align}
+  E[R]    &= [(\tau\Sigma)^{-1}+P^T\Omega^{-1}P]^{-1}[(\tau\Sigma)^{-1}\Pi+P^T\Omega^{-1}Q] \\
+  \hat{w} &= (\Sigma^{-1}E[R])/(1^T\Sigma^{-1}E[R])
+\end{align}
+</escape>
+
+<escape>
+\begin{align*}
+  N       &\qquad\text{is the number of assets} \\
+  K       &\qquad\text{is the number of views} \\
+  E[R]    &\qquad\text{is the new (posterior) Combined Return Vector (N x 1 column vector)} \\
+  \tau    &\qquad\text{is a scalar} \\
+  \Sigma  &\qquad\text{is the covariance matrix of excess returns (N x N matrix)} \\
+  P       &\qquad\text{is a matrix that identifies the assets involved in the views} \\
+          &\qquad\text{(K x N matrix or 1 x N row vector in the special case of 1 view)} \\
+  \Omega  &\qquad\text{is a diagonal covariance matrix of error terms from the expressed views} \\
+          &\qquad\text{representing the uncertainty in each view (K x K matrix)} \\
+  \Pi     &\qquad\text{is the Implied Equilibrium Return Vector (N x 1 column vector)} \\
+  Q       &\qquad\text{is the View Vector (K x 1 column vector)} \\
+  \hat{w} &\qquad\text{is the new portfolio weight (N x 1 column vector) derived by the model} \\
+  \lambda &\qquad\text{is the risk aversion coefficient}
+\end{align*}
+</escape>
+
+<p>수식이 엄청 복잡해 보이지만, 간단하게 요약하자면 수식(1)은 시장 데이터를 통해 도출된 “적당한” 수익률($\Pi$)과 투자자의 전망($Q$)을 “잘” 조합하여 새로운 기대수익률($E[R]$)을 만드는 과정입니다. 이렇게 도출된 기대수익률을 수식(2, unconstrained mean-variance maximization)와 같이 사용하여 새로운 포트폴리오 비중($\hat{w}$)을 구하는 것이, 모델의 최종 목표입니다.</p>
+<p>이제 각각의 input들이 어떤 의미를 가지고 어떻게 설정해야 하는지, 소스코드가 진행되는 순서를 따라 예시와 함께 살펴봅시다.</p>
+<hr>
+<h1 id="2-Bottom-up-with-an-example"><a href="#2-Bottom-up-with-an-example" class="headerlink" title="2. Bottom-up (with an example)"></a>2. Bottom-up (with an example)</h1><h2 id="2-1-N-The-Number-of-Assets"><a href="#2-1-N-The-Number-of-Assets" class="headerlink" title="2.1. $N$ : The Number of Assets"></a>2.1. $N$ : The Number of Assets</h2><p>모델에 사용되는 자산의 개수입니다.</p>
+<p>이번 포스팅에서는, 국내 주식 10개 섹터 수익률 데이터를 사용하기로 합니다. 섹터별 수익률 데이터(<code>monthly_excess_returns</code>)와 각 섹터별 비중(<code>w_mkt</code>) 데이터가 필요합니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> numpy.linalg <span class="keyword">import</span> inv</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>monthly_excess_returns</span><br><span class="line">일자          에너지      소재    산업재  ...        IT  통신서비스  유틸리티</span><br><span class="line"><span class="number">2000</span>-02-<span class="number">29</span>  <span class="number">0.064542</span> -<span class="number">0.101358</span> -<span class="number">0.084858</span>  ...  <span class="number">0.079742</span>   -<span class="number">0.044158</span> -<span class="number">0.160058</span></span><br><span class="line"><span class="number">2000</span>-03-<span class="number">31</span>  <span class="number">0.169433</span>  <span class="number">0.027033</span>  <span class="number">0.054333</span>  ...  <span class="number">0.044533</span>   -<span class="number">0.091467</span>  <span class="number">0.103133</span></span><br><span class="line"><span class="number">2000</span>-04-<span class="number">30</span> -<span class="number">0.190800</span> -<span class="number">0.175200</span> -<span class="number">0.187300</span>  ... -<span class="number">0.247900</span>   -<span class="number">0.275900</span>  <span class="number">0.035600</span></span><br><span class="line"><span class="number">2000</span>-05-<span class="number">31</span> -<span class="number">0.072333</span> -<span class="number">0.098433</span> -<span class="number">0.122233</span>  ... -<span class="number">0.050033</span>    <span class="number">0.138067</span> -<span class="number">0.072133</span></span><br><span class="line"><span class="number">2000</span>-06-<span class="number">30</span>  <span class="number">0.112958</span>  <span class="number">0.061258</span>  <span class="number">0.065258</span>  ...  <span class="number">0.143958</span>    <span class="number">0.045258</span>  <span class="number">0.124458</span></span><br><span class="line">              ...       ...       ...  ...       ...         ...       ...</span><br><span class="line"><span class="number">2020</span>-08-<span class="number">31</span>  <span class="number">0.043058</span>  <span class="number">0.144558</span>  <span class="number">0.016958</span>  ... -<span class="number">0.024642</span>    <span class="number">0.083358</span>  <span class="number">0.040158</span></span><br><span class="line"><span class="number">2020</span>-09-<span class="number">30</span> -<span class="number">0.072250</span> -<span class="number">0.049650</span> -<span class="number">0.002950</span>  ...  <span class="number">0.018750</span>   -<span class="number">0.025350</span> -<span class="number">0.001750</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">10</span>-<span class="number">31</span> -<span class="number">0.036650</span> -<span class="number">0.001250</span> -<span class="number">0.004250</span>  ... -<span class="number">0.041450</span>   -<span class="number">0.077950</span> -<span class="number">0.000150</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">11</span>-<span class="number">30</span>  <span class="number">0.224950</span>  <span class="number">0.186950</span>  <span class="number">0.125250</span>  ...  <span class="number">0.147450</span>    <span class="number">0.104550</span>  <span class="number">0.067050</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">12</span>-<span class="number">29</span>  <span class="number">0.034150</span>  <span class="number">0.036150</span>  <span class="number">0.031150</span>  ...  <span class="number">0.117950</span>   -<span class="number">0.002550</span>  <span class="number">0.149450</span></span><br><span class="line">[<span class="number">251</span> rows x <span class="number">10</span> columns]</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>monthly_excess_returns.columns</span><br><span class="line">Index([<span class="string">&#x27;에너지&#x27;</span>, <span class="string">&#x27;소재&#x27;</span>, <span class="string">&#x27;산업재&#x27;</span>, <span class="string">&#x27;경기소비재&#x27;</span>, <span class="string">&#x27;필수소비재&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;의료&#x27;</span>, <span class="string">&#x27;금융&#x27;</span>, <span class="string">&#x27;IT&#x27;</span>, <span class="string">&#x27;통신서비스&#x27;</span>, <span class="string">&#x27;유틸리티&#x27;</span>],</span><br><span class="line">      dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_mkt</span><br><span class="line">에너지        <span class="number">0.0338</span></span><br><span class="line">소재          <span class="number">0.0912</span></span><br><span class="line">산업재        <span class="number">0.0924</span></span><br><span class="line">경기소비재    <span class="number">0.1315</span></span><br><span class="line">필수소비재    <span class="number">0.0452</span></span><br><span class="line">의료          <span class="number">0.1120</span></span><br><span class="line">금융          <span class="number">0.0609</span></span><br><span class="line">IT            <span class="number">0.4103</span></span><br><span class="line">통신서비스    <span class="number">0.0134</span></span><br><span class="line">유틸리티      <span class="number">0.0094</span></span><br><span class="line">Name: weights, dtype: float64</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>N = monthly_excess_returns.columns.size</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>N</span><br><span class="line"><span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-2-Sigma-Covariance-Matrix-of-Asset-Excess-Returns"><a href="#2-2-Sigma-Covariance-Matrix-of-Asset-Excess-Returns" class="headerlink" title="2.2. $\Sigma$ : Covariance Matrix of Asset Excess Returns"></a>2.2. $\Sigma$ : Covariance Matrix of Asset Excess Returns</h2><p>각 자산별 초과수익률의 공분산행렬입니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>Sigma = monthly_excess_returns.cov()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>Sigma</span><br><span class="line">            에너지    소재      산업재    ...  IT        통신서비스  유틸리티</span><br><span class="line">에너지      <span class="number">0.008452</span>  <span class="number">0.004698</span>  <span class="number">0.005392</span>  ...  <span class="number">0.003733</span>  <span class="number">0.002320</span>    <span class="number">0.002559</span></span><br><span class="line">소재        <span class="number">0.004698</span>  <span class="number">0.005819</span>  <span class="number">0.005411</span>  ...  <span class="number">0.003941</span>  <span class="number">0.002314</span>    <span class="number">0.002564</span></span><br><span class="line">산업재      <span class="number">0.005392</span>  <span class="number">0.005411</span>  <span class="number">0.007203</span>  ...  <span class="number">0.004600</span>  <span class="number">0.002450</span>    <span class="number">0.002828</span></span><br><span class="line">경기소비재  <span class="number">0.003492</span>  <span class="number">0.004154</span>  <span class="number">0.004939</span>  ...  <span class="number">0.004753</span>  <span class="number">0.002500</span>    <span class="number">0.002234</span></span><br><span class="line">필수소비재  <span class="number">0.002434</span>  <span class="number">0.002301</span>  <span class="number">0.002803</span>  ...  <span class="number">0.001972</span>  <span class="number">0.001537</span>    <span class="number">0.001942</span></span><br><span class="line">의료        <span class="number">0.003892</span>  <span class="number">0.003948</span>  <span class="number">0.004827</span>  ...  <span class="number">0.004101</span>  <span class="number">0.002414</span>    <span class="number">0.001920</span></span><br><span class="line">금융        <span class="number">0.004257</span>  <span class="number">0.004220</span>  <span class="number">0.004727</span>  ...  <span class="number">0.004055</span>  <span class="number">0.002356</span>    <span class="number">0.002712</span></span><br><span class="line">IT          <span class="number">0.003733</span>  <span class="number">0.003941</span>  <span class="number">0.004600</span>  ...  <span class="number">0.007571</span>  <span class="number">0.002820</span>    <span class="number">0.001931</span></span><br><span class="line">통신서비스  <span class="number">0.002320</span>  <span class="number">0.002314</span>  <span class="number">0.002450</span>  ...  <span class="number">0.002820</span>  <span class="number">0.004575</span>    <span class="number">0.002056</span></span><br><span class="line">유틸리티    <span class="number">0.002559</span>  <span class="number">0.002564</span>  <span class="number">0.002828</span>  ...  <span class="number">0.001931</span>  <span class="number">0.002056</span>    <span class="number">0.004902</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="2-3-Reverse-Optimization-Process"><a href="#2-3-Reverse-Optimization-Process" class="headerlink" title="2.3. Reverse Optimization Process"></a>2.3. Reverse Optimization Process</h2><p>Mean-variance optimization process를 추상적으로 요약하자면, 자산의 수익률과 공분산 데이터를 사용하여 “최대 수익률, 최저 변동성”을 가지는 포트폴리오 비중을 구하는 과정이라고 할 수 있습니다. ($f: (\mu, \Sigma) \rightarrow w$) 이를 수식으로 표현한 것이 <em>quadratic risk utility function</em>이고, 최적화 문제를 아래와 같이 나타낼 수 있습니다.</p>
+<escape>
+\begin{align}
+& \underset{w}{\operatorname{max}}\left(w^T\mu - \frac{1}{2}\lambda w^T\Sigma w\right) \\
+& \rightarrow \mu - \lambda\Sigma w = 0 \\
+& \rightarrow w = (\lambda\Sigma)^{-1}\mu
+\end{align}
+</escape>
+
+<p>현재 시장에서 관찰할 수 있는 시가총액비중(market capitalization weight)이 위의 최적화 과정에서 도출 된 이상적인 비중이라고 가정 해봅시다. 자산 간 공분산행렬이 있는 경우, 식 (5)를 아래와 같이 변형하여, 각 자산의 “implied returns”를 역으로 구할 수 있습니다. ($g:(w_{mkt}, \Sigma) \rightarrow \mu_{implied}$).</p>
+<escape>
+\begin{align}
+\mu_{implied} = \lambda \Sigma w_{mkt}
+\end{align}
+</escape>
+
+<p>위와 같이, 시장에서 관측되는 자산비중을 기반으로 균형 수익률을 찾아내는 과정을 “Reverse Optimization Process”이라 하고, 이렇게 구해진 $\mu_{implied}$를 $\Pi$로 표기합니다.</p>
+<h2 id="2-4-lambda-Risk-Aversion-Coefficient"><a href="#2-4-lambda-Risk-Aversion-Coefficient" class="headerlink" title="2.4. $\lambda$ : Risk Aversion Coefficient"></a>2.4. $\lambda$ : Risk Aversion Coefficient</h2><p>Reverse optimization process에서, 투자자가 낮은 변동성을 위하여 trade-off 할 수 있는 수익률 수준을 나타내는 상수로써, 일종의 scaling factor 역할을 합니다. 즉, $\lambda$가 클수록, implied returns ($\Pi$) 값이 커지게 됩니다. 값을 설정하는 방법은 자료에 따라 상이하지만, 얼추 다음과 같이 정리할 수 있습니다.</p>
+<ul>
+<li><strong>방법 1</strong> : <code>2.15</code> ~ <code>2.65</code> 사이의 값 (BLM 관련 연구자료들의 추천 결과 값)</li>
+<li><strong>방법 2</strong> : $\frac{E(R_m)-R_f}{\sigma^2_m}$ (시가총액가중 포트폴리오의 평균 초과수익률 &#x2F; 분산)</li>
+</ul>
+<p>본 포스팅에서는 두 번째 방법을 사용하도록 하겠습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>expected_portfolio_excess_return = monthly_excess_returns.mean().multiply(w_mkt).<span class="built_in">sum</span>()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>portfolio_variance = w_mkt.dot(Sigma).dot(w_mkt)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>lambd = expected_portfolio_excess_return / portfolio_variance</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>lambd</span><br><span class="line"><span class="number">1.4956952957871978</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-5-Pi-Implied-Excess-Equilibrium-Return-Vector"><a href="#2-5-Pi-Implied-Excess-Equilibrium-Return-Vector" class="headerlink" title="2.5. $\Pi$ : Implied Excess Equilibrium Return Vector"></a>2.5. $\Pi$ : Implied Excess Equilibrium Return Vector</h2><p>위에서 계산한 $\lambda$, $\Sigma$, $w_{mkt}$를 사용하여, 현 시장에서 관측되는 시가총액비중 기반 equilibrium return vector를 다음과 같이 계산합니다.</p>
+<escape>
+\begin{equation}
+  \Pi = \lambda \Sigma w_{mkt}
+\end{equation}
+</escape>
+
+<escape>
+\begin{align*}
+  \lambda &\qquad\text{is the risk aversion coefficient} \\
+  \Sigma  &\qquad\text{is the covariance matrix of excess returns (N x N matrix)} \\
+  w_{mkt} &\qquad\text{is the market capitalization weight (N x 1 column vector) of the assets}
+\end{align*}
+</escape>
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>Pi = lambd * Sigma.dot(w_mkt)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>Pi</span><br><span class="line">에너지        <span class="number">0.006078</span></span><br><span class="line">소재          <span class="number">0.006298</span></span><br><span class="line">산업재        <span class="number">0.007318</span></span><br><span class="line">경기소비재    <span class="number">0.006756</span></span><br><span class="line">필수소비재    <span class="number">0.003517</span></span><br><span class="line">의료          <span class="number">0.006820</span></span><br><span class="line">금융          <span class="number">0.006116</span></span><br><span class="line">IT            <span class="number">0.008216</span></span><br><span class="line">통신서비스    <span class="number">0.003837</span></span><br><span class="line">유틸리티      <span class="number">0.003304</span></span><br><span class="line">dtype: float64</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-6-K-The-Number-of-Views"><a href="#2-6-K-The-Number-of-Views" class="headerlink" title="2.6. $K$ : The Number of Views"></a>2.6. $K$ : The Number of Views</h2><p>Black-Litterman Model에서는 투자자가 가지고 있는 정보를 “View”라고 정의합니다. (한글로 해석하면 ‘전망’ 정도 될 것 같습니다.)</p>
+<p>이번 예시에서는, 투자자에게 다음과 같은 세 가지의 view가 있다고 가정해봅시다.</p>
+<ul>
+<li><strong>View 1</strong> : IT 섹터의 초과 수익률이 2%가 될 것이다. (Confidence level &#x3D; 75%)</li>
+<li><strong>View 2</strong> : 통신서비스 섹터의 수익률이 유틸리티 섹터의 수익률보다 3% 높을 것이다. (Confidence level &#x3D; 25%)</li>
+<li><strong>View 3</strong> : 에너지 섹터의 수익률이 경기소비재, 필수소비재 섹터 수익률보다 1% 높을 것이다. (Confidence level &#x3D; 50%)</li>
+</ul>
+<p>여기서 view 1은 “absolute view”, view 2~3은 “relative view”라고 합니다. Relative view는 outperforming 하는 자산(통신서비스, 에너지)과 underperforming 하는 자산(유틸리티, 경기소비재, 필수소비재)을 포함합니다. 예시의 view 3에서와 같이, outperforming 하는 자산의 수와 underperforming하는 자산의 수가 반드시 동일해야 할 필요는 없습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>K = <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-7-Q-View-Vector"><a href="#2-7-Q-View-Vector" class="headerlink" title="2.7. $Q$ : View Vector"></a>2.7. $Q$ : View Vector</h2><p>각 view들의 예상 수치(예상 절대&#x2F;상대수익률)를 포함하는, $K$x$1$ column matrix 입니다. 이번 예시에서의 view vector는 다음과 같습니다.</p>
+<escape>
+\begin{equation*}
+  K =
+  \begin{bmatrix}
+    0.02 \\
+    0.03 \\
+    0.01 \\
+  \end{bmatrix}
+\end{equation*}
+</escape>
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>Q = np.array([<span class="number">0.02</span>, <span class="number">0.03</span>, <span class="number">0.01</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">assert</span> Q.shape == (K,)</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-8-P-Picking-Matrix"><a href="#2-8-P-Picking-Matrix" class="headerlink" title="2.8. $P$ : Picking Matrix"></a>2.8. $P$ : Picking Matrix</h2><p>View에 포함되는 자산들을 명시해주는 행렬입니다. 이번 예시의 경우, 총 3개의 view와 10개의 자산이 있으므로, $P$는 아래와 같은 3x10 행렬이 됩니다.</p>
+<escape>
+\begin{equation*}
+  P =
+  \begin{bmatrix}
+    0 & 0 & 0 &    0 &    0 & 0 & 0 & 1 & 0 &  0 \\
+    0 & 0 & 0 &    0 &    0 & 0 & 0 & 0 & 1 & -1 \\
+    1 & 0 & 0 & -0.5 & -0.5 & 0 & 0 & 0 & 0 &  0 \\
+  \end{bmatrix}
+\end{equation*}
+</escape>
+
+<p>첫 번째 행은 첫 번째 view를 나타낸 행으로, 데이터 순서 상 8번 째 자산인 IT섹터를 1로 표시합니다. Absolute view의 경우에는 이와 같이 하나의 column만 1이 되는 row의 형태로 나타납니다.</p>
+<p>두 번째와 세 번째 행은, 각각 두 번째와 세 번째 view를 나타냅니다. Outperforming 할 것으로 예상되는 자산은 양수로, underperforming 할 것으로 예상되는 자산은 음수로 표시하여, row의 총 합이 0이 되도록 맞춰줍니다.<br>View 3와 같이 다수의 자산이 명시가 되어야 하는 경우, outperforming 하는 자산의 합이 1, underperforming 하는 자산의 합이 -1, row의 총 합이 0이 되도록 값을 분배합니다.</p>
+<p>위의 행렬 $P$에서 view 3는 underperforming 할 것으로 예상되는 두 자산(경기소비재, 필수소비재)에 대해 동일한 비중으로 값을 설정했습니다. 이 경우, 상대적으로 market cap이 작은 자산의 최종 포트폴리오 비중의 값이 더 많이 변하는 문제가 발생할 수 있습니다. 이러한 문제를 해결하기 위해, $P$ 행렬에서의 비중을 market cap과 동일(혹은 유사)하게 설정하는 방법이 있습니다.</p>
+<p>이번 예시에서 경기소비재의 market cap(0.1315)은 필수소비재의 market cap(0.0452)의 약 3배 정도 됩니다. 이를 고려하여 $P$의 값을 아래와 같이 조정할 수 있습니다.</p>
+<escape>
+\begin{equation*}
+  P =
+  \begin{bmatrix}
+    0 & 0 & 0 &     0 &     0 & 0 & 0 & 1 & 0 &  0 \\
+    0 & 0 & 0 &     0 &     0 & 0 & 0 & 0 & 1 & -1 \\
+    1 & 0 & 0 & -0.75 & -0.25 & 0 & 0 & 0 & 0 &  0 \\
+  \end{bmatrix}
+\end{equation*}
+</escape>
+
+<p>위에서 정의 된 $P$의 k번째 행(1xN row vector)을 $p_k$로 표기합시다. 이를 사용해서, 각 view를 기반으로 구성된 portfolio의 variance를 $p_k \Sigma p_k^T$로 구할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>P = np.array([</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>    [<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,    <span class="number">0</span>,    <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>,  <span class="number">0</span>],</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>    [<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,    <span class="number">0</span>,    <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, -<span class="number">1</span>],</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>    [<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, -<span class="number">.75</span>, -<span class="number">.25</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,  <span class="number">0</span>]</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">assert</span> P.shape == (K, N)</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-9-tau-Scalar-“Tuning”-Constant"><a href="#2-9-tau-Scalar-“Tuning”-Constant" class="headerlink" title="2.9. $\tau$ : Scalar “Tuning” Constant"></a>2.9. $\tau$ : Scalar “Tuning” Constant</h2><p>Prior estimate of returns($\Pi$)에 대한 불확실 정도를 나타내는 수치입니다. $\tau$ 값이 작을수록, 모델에 의해 계산되는 combined return vector($E[R]$)가 implied equilibrium return($\Pi$)에 가까워지게 됩니다.</p>
+<p>아쉽게도, $\tau$ 값을 정하는 명확한 가이드가 없습니다. 아래는 $\tau$값으로 제시된 다양한 후보들입니다.</p>
+<ul>
+<li><em>0.01과 0.05 사이의 값</em>으로 최초 설정한 뒤, tracking error를 줄이는 방향으로 조정</li>
+<li><em>1</em>로 설정 (Satchell and Scowcroft, 2000)</li>
+<li>*1&#x2F;(number of observation)*으로 설정 (Blamont and Firoozye, 2003)</li>
+</ul>
+<p>좋게 보면 flexible하다고 볼 수 있지만, 일관된 기준이 없다는 점은 모델을 이해하기 어렵고 애매모호하게 만듭니다.</p>
+<p>이러한 모호함을 없애기 위하여, 이후 소개드릴 <strong>$\Omega$의 값에 $\tau$를 factor-out 시킬 수 있도록 값을 설정하는 방법</strong>이 있습니다. (Idzorek, 2007) 이번 포스팅에서는 해당 방법을 사용하겠습니다. 따라서, $\tau$에 0이 아닌 어떠한 값을 넣어도, 최종 결과($E[R]$)에는 영향을 미치지 않게 됩니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>tau = <span class="number">1</span>  <span class="comment"># 0이 아닌 임의의 값</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="2-10-Omega-Uncertainty-Matrix-of-Views"><a href="#2-10-Omega-Uncertainty-Matrix-of-Views" class="headerlink" title="2.10. $\Omega$ : Uncertainty Matrix of Views"></a>2.10. $\Omega$ : Uncertainty Matrix of Views</h2><p>개별 view들의 불확실 정도를 나타내는 대각행렬입니다. 행렬의 원소인 $\omega_k$가 0에 가까울 수록 view k의 confidence가 100%에 가깝다는 것을 의미하고, $\omega_k$가 클수록 해당 view의 불확실성이 높음을 의미합니다.</p>
+<escape>
+\begin{equation}
+  \Omega =
+  \begin{bmatrix}
+    \omega_1 & 0 & 0 \\
+    0 & \ddots & 0 \\
+    0 & 0 & \omega_k \\
+  \end{bmatrix}
+\end{equation}
+</escape>
+
+<p>사용자가 개별 view에 대한 confidence 정보를 가지고 있는 경우, $\Omega$의 값을 직접 입력할 수도 있지만, 이번 포스팅에서는 개별 view를 기반으로 생성된 portfolio의 variance를 이용하는 방법을 사용하겠습니다. <em>(Confidence level of views를 기반으로 $\Omega$를 정하는 방법은 본 포스팅의 이후 챕터에서 확인하실 수 있습니다.)</em></p>
+<escape>
+\begin{equation*}
+  \Omega = diag(P(\tau\Sigma)P^T) =
+  \begin{bmatrix}
+    (p_1 \Sigma p_1^T)*\tau & 0 & 0 \\
+    0 & \ddots & 0 \\
+    0 & 0 & (p_K \Sigma p_K^T)*\tau \\
+  \end{bmatrix}
+\end{equation*}
+</escape>
+
+<p>위와 같이 $\Omega$를 설정할 경우, $\tau$ 값이 변해도 $E[R]$ 값이 변하지 않습니다. $\tau$와 $\Omega$값이 데이터를 기반으로 계산이 되므로, 매니저는 view와 관련된 input만 신경을 쓰면 됩니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>Omega = tau*P.dot(Sigma).dot(P.T) * np.eye(K)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>Omega</span><br><span class="line">array([[ <span class="number">0.0075706</span> ,  <span class="number">0.</span>        , -<span class="number">0.</span>        ],</span><br><span class="line">       [ <span class="number">0.</span>        ,  <span class="number">0.00536469</span>, -<span class="number">0.</span>        ],</span><br><span class="line">       [-<span class="number">0.</span>        , -<span class="number">0.</span>        ,  <span class="number">0.00634097</span>]])</span><br></pre></td></tr></table></figure>
+
+<p>단, 이번 포스팅에서와 같이 <strong>데이터를 기반으로 $\tau$와 $\Omega$를 정하는 방법은 모델을 사용하는 여러가지 방법 중 하나</strong>임을 인지할 필요가 있습니다. 필요시, 해당 값들을 변경해가며 최적의 모델 결과를 도출하면 되겠습니다.</p>
+<hr>
+<h1 id="3-Run-It-but-without-confidence-level-of-views"><a href="#3-Run-It-but-without-confidence-level-of-views" class="headerlink" title="3. Run It (but without confidence level of views)"></a>3. Run It (but without confidence level of views)</h1><p>모델에 필요한 데이터들이 준비됐습니다. 이를 기반으로 $E[R]$과 $\hat{w}$를 다음과 같이 구할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>ER = Pi + tau*Sigma.dot(P.T).dot(inv(P.dot(tau*Sigma).dot(P.T) + Omega).dot(Q - P.dot(Pi)))</span><br><span class="line"><span class="meta">... </span><span class="comment"># 수식(1)을 다르게 표현한 수식으로, 동일한 결과값을 계산합니다</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ER</span><br><span class="line">에너지       <span class="number">0.012334</span></span><br><span class="line">소재         <span class="number">0.009002</span></span><br><span class="line">산업재       <span class="number">0.010075</span></span><br><span class="line">경기소비재   <span class="number">0.009281</span></span><br><span class="line">필수소비재   <span class="number">0.003478</span></span><br><span class="line">의료         <span class="number">0.010962</span></span><br><span class="line">금융         <span class="number">0.008156</span></span><br><span class="line">IT           <span class="number">0.015176</span></span><br><span class="line">통신서비스   <span class="number">0.012539</span></span><br><span class="line">유틸리티    -<span class="number">0.002864</span></span><br><span class="line">dtype: float64</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat = inv(Sigma).dot(ER)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat = pd.Series(w_hat / w_hat.<span class="built_in">sum</span>(), index=R.columns)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat</span><br><span class="line">에너지       <span class="number">0.430068</span></span><br><span class="line">소재         <span class="number">0.063951</span></span><br><span class="line">산업재       <span class="number">0.064792</span></span><br><span class="line">경기소비재  -<span class="number">0.212565</span></span><br><span class="line">필수소비재  -<span class="number">0.069897</span></span><br><span class="line">의료         <span class="number">0.078536</span></span><br><span class="line">금융         <span class="number">0.042704</span></span><br><span class="line">IT           <span class="number">0.586425</span></span><br><span class="line">통신서비스   <span class="number">1.284972</span></span><br><span class="line">유틸리티    -<span class="number">1.268985</span></span><br><span class="line">dtype: float64</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat - w_mkt</span><br><span class="line">에너지       <span class="number">0.396268</span></span><br><span class="line">소재        -<span class="number">0.027249</span></span><br><span class="line">산업재      -<span class="number">0.027608</span></span><br><span class="line">경기소비재  -<span class="number">0.344065</span></span><br><span class="line">필수소비재  -<span class="number">0.115097</span></span><br><span class="line">의료        -<span class="number">0.033464</span></span><br><span class="line">금융        -<span class="number">0.018196</span></span><br><span class="line">IT           <span class="number">0.176125</span></span><br><span class="line">통신서비스   <span class="number">1.271572</span></span><br><span class="line">유틸리티    -<span class="number">1.278385</span></span><br><span class="line">dtype: float64</span><br></pre></td></tr></table></figure>
+
+<p>Outperform 할 것으로 예상되는 섹터들(IT, 통신서비스, 에너지)의 비중은 상향 조정되었고, underperform 할 것으로 예상되는 섹터들(유틸리티, 경기소비재, 필수소비재)의 비중은 하향 조정되었습니다. View에 포함된 자산 뿐만 아니라, 포함되지 않은 자산까지 비중이 전체적으로 조정된 것을 확인할 수 있습니다.</p>
+<p>조정된 비중을 살펴보면 설명이 애매한 부분들이 있습니다. 그 중 하나가, 상대적으로 confidence level이 높은 view 1(IT &#x3D; 2%)에 비해 confidence level이 낮은 view 2(통신서비스 - 유틸리티 &#x3D; 3%)의 비중이 과도하게 조정이 됐다는 점입니다. 앞선 프로세스를 잘 생각해보면, <strong>아직 각 view의 confidence level을 모델에 반영하지 않았고</strong>, 이로 인해 비중의 조정이 $Q$의 값에 지나치게 영향을 많이 받았을 가능성이 있습니다.</p>
+<hr>
+<h1 id="4-Considering-Confidence-Level-of-Views"><a href="#4-Considering-Confidence-Level-of-Views" class="headerlink" title="4. Considering Confidence Level of Views"></a>4. Considering Confidence Level of Views</h1><p>본 포스팅에서 사용하는 view들을 다시 한번 확인해봅시다.</p>
+<ul>
+<li><strong>View 1</strong> : IT 섹터의 초과 수익률이 2%가 될 것이다. <strong>(Confidence level &#x3D; 75%)</strong></li>
+<li><strong>View 2</strong> : 통신서비스 섹터의 수익률이 유틸리티 섹터의 수익률보다 3% 높을 것이다. <strong>(Confidence level &#x3D; 25%)</strong></li>
+<li><strong>View 3</strong> : 에너지 섹터의 수익률이 경기소비재, 필수소비재 섹터 수익률보다 1% 높을 것이다. <strong>(Confidence level &#x3D; 50%)</strong></li>
+</ul>
+<p>각 view의 confidence level인 75%, 25%, 50%의 값을 모델에 어떻게 녹여낼 수 있을까요? $\Omega$ (uncertainty matrix of views)와 연관이 있는 건 확실해 보이는데, 그렇다고 위의 값($0.75$, $0.25$, $0.50$)을 그대로 행렬에 넣을 수는 없어 보입니다. $\Omega$ 값을 조정해보면서 결과를 살펴봐야 하는데, 이러한 과정을 체계화하여 정리한 하나의 방법을 소개해드리겠습니다. (Idzorek, 2007)</p>
+<ol>
+<li><p>계산 과정에 필요한 모듈을 import하고 새로 계산될 $\Omega$의 결과를 담아둘 수 있는 행렬을 선언합니다.</p>
+ <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> scipy <span class="keyword">import</span> optimize</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>implied_Omega = np.zeros((K, K))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>k = <span class="number">0</span>  <span class="comment"># 본 포스팅을 line-by-line 실행하는 경우를 위하여 임시로 선언하는 iterator로,</span></span><br><span class="line"><span class="meta">... </span>       <span class="comment"># 실제 구현에서는 사용되지 않습니다</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>각 view의 confidence level들로 이루어진 행렬 $C$를 정의합니다.</p>
+ <escape>
+ \begin{equation}
+   C =
+   \begin{bmatrix}
+     0.75 \\
+     0.25 \\
+     0.50 \\
+   \end{bmatrix}
+ \end{equation}
+ </escape>
+
+ <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>C = np.array([<span class="number">0.75</span>, <span class="number">0.25</span>, <span class="number">0.50</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">assert</span> C.shape == (K,)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>이제 각 view를 iterator <code>k</code>를 사용하여 하나씩 iterate하면서 아래의 과정을 진행합니다.</p>
+<ol start="3">
+<li><p><strong>View k가 모델의 유일한 view이고 100% 확실다는 가정하에</strong>, $E[R]$ 값과 $w$ 값을 계산합니다. (이 때 계산되는 결과값을 각각 $E[R_{\text{k,100%}}]$ , $w_{\text{k,100%}}$ 라고 표기합니다.)</p>
+<p> View k가 100% 확실한 경우, (1)~(2)의 수식은 아래와 같이 정리할 수 있습니다.</p>
+ <escape>
+ \begin{align}
+   E[R_{\text{k,100%}}]  &= \Pi + \tau\Sigma P_{k}^T (P_k \tau\Sigma P_{k}^T)^{-1}\\
+   w_{\text{k,100%}}     &= (\Sigma^{-1}E[R_{\text{k,100%}}])/(1^T\Sigma^{-1}E[R_{\text{k,100%}}])
+ \end{align}
+ </escape>
+
+ <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 기존 ER을 구하는 수식에서 P를 P[None, k]로, Q를 Q[None, k]로 대체하고,</span></span><br><span class="line"><span class="comment"># Omega를 생략한 수식입니다.</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ER_k_100 = Pi + tau*Sigma.dot(P[<span class="literal">None</span>, k].T).dot(inv(P[<span class="literal">None</span>, k].dot(tau * Sigma).dot(P[<span class="literal">None</span>, k].T)).dot(Q[<span class="literal">None</span>, k] - P[<span class="literal">None</span>, k].dot(Pi)))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_k_100 = inv(Sigma).dot(ER_k_100)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_k_100 = pd.Series(w_k_100 / w_k_100.<span class="built_in">sum</span>(), index=R.columns)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_k_100</span><br><span class="line">에너지       <span class="number">0.016562</span></span><br><span class="line">소재         <span class="number">0.044689</span></span><br><span class="line">산업재       <span class="number">0.045277</span></span><br><span class="line">경기소비재   <span class="number">0.064436</span></span><br><span class="line">필수소비재   <span class="number">0.022148</span></span><br><span class="line">의료         <span class="number">0.054881</span></span><br><span class="line">금융         <span class="number">0.029842</span></span><br><span class="line">IT           <span class="number">0.710993</span></span><br><span class="line">통신서비스   <span class="number">0.006566</span></span><br><span class="line">유틸리티     <span class="number">0.004606</span></span><br><span class="line">dtype: float64</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>View k가 모델의 유일한 view라는 가정하에</strong>, 주어진 confidence level을 반영되었을 경우의 $w$를 추론합니다. (이 때 추론되는 값을 $w_{\text{k,%}}$ 라고 표기합니다.)</p>
+<p> View k의 confidence level이 100%인 경우 포트폴리오 비중이 $w_{\text{k,100%}}$이고, confidence level이 0%인 경우 포트폴리오 비중이 $w_{mkt}$입니다. 따라서, confidence level이 $C_k$인 경우 포트폴리오 비중을 다음과 같이 추론할 수 있습니다.</p>
+ <escape>
+ \begin{align}
+   w_{\text{k,%}} = w_{mkt} + (w_{\text{k,100%}} - w_{mkt}) * C_k
+ \end{align}
+ </escape>
+
+ <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_k_implied = w_mkt + (w_k_100 - w_mkt) * C[k]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>View k가 모델의 유일한 view라는 가정하에</strong>, view k의 confidence interval $\omega_k$ (<code>omega_k</code>, the k-th diagonal element of $\Omega$) 값을 조절해보면서, confidence interval이 반영된 포트폴리오의 결과가 $w_{\text{k,%}}$에 가깝도록 하는 $\omega_k$ 값을 찾습니다.</p>
+ <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">fun</span>(<span class="params">omega_k</span>):</span><br><span class="line">    <span class="comment"># 기존 ER을 구하는 수식에서 P를 P[None, k]로, Q를 Q[None, k]로 대체한 수식입니다.</span></span><br><span class="line">    ER_k = Pi + tau * Sigma.dot(P[<span class="literal">None</span>, k].T).dot(inv(P[<span class="literal">None</span>, k].dot(tau * Sigma).dot(P[<span class="literal">None</span>, k].T) + omega_k).dot(Q[<span class="literal">None</span>, k] - P[<span class="literal">None</span>, k].dot(Pi)))</span><br><span class="line">    </span><br><span class="line">    w_k = inv(Sigma).dot(ER_k)</span><br><span class="line">    w_k = pd.Series(w_k / w_k.<span class="built_in">sum</span>(), index=R.columns)</span><br><span class="line">    </span><br><span class="line">    diff = w_k_implied - w_k</span><br><span class="line">    <span class="keyword">return</span> diff.T.dot(diff)</span><br><span class="line"></span><br><span class="line">implied_Omega[k][k] = optimize.minimize_scalar(</span><br><span class="line">    fun=fun,</span><br><span class="line">    bounds=(<span class="number">1e-8</span>, <span class="number">1e+12</span>),</span><br><span class="line">    method=<span class="string">&#x27;bounded&#x27;</span>,</span><br><span class="line">).x</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>위 3~5번 과정을 모든 k에 대해 iterate하여 <code>implied_Omega</code>를 구합니다.</p>
+ <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>implied_Omega</span><br><span class="line">array([[<span class="number">0.00514838</span>, <span class="number">0.</span>        , <span class="number">0.</span>        ],</span><br><span class="line">       [<span class="number">0.</span>        , <span class="number">0.01609381</span>, <span class="number">0.</span>        ],</span><br><span class="line">       [<span class="number">0.</span>        , <span class="number">0.</span>        , <span class="number">0.006342</span>  ]])</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>이렇게 계산된 <code>implied_Omega</code> 값을 사용하여 전체적인 모델 프로세스를 다시 진행하면, 다음과 같은 결과를 얻을 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>ER_with_CL = Pi + tau * Sigma.dot(P.T).dot(inv(P.dot(tau * Sigma).dot(P.T) + implied_Omega).dot(Q - P.dot(Pi)))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat_with_CL = inv(Sigma).dot(ER_with_CL)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat_with_CL = pd.Series(w_hat_with_CL / w_hat_with_CL.<span class="built_in">sum</span>(), index=R.columns)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>w_hat_with_CL</span><br><span class="line">에너지       <span class="number">0.377316</span></span><br><span class="line">소재         <span class="number">0.058063</span></span><br><span class="line">산업재       <span class="number">0.058827</span></span><br><span class="line">경기소비재  -<span class="number">0.183128</span></span><br><span class="line">필수소비재  -<span class="number">0.060173</span></span><br><span class="line">의료         <span class="number">0.071305</span></span><br><span class="line">금융         <span class="number">0.038772</span></span><br><span class="line">IT           <span class="number">0.624501</span></span><br><span class="line">통신서비스   <span class="number">0.583587</span></span><br><span class="line">유틸리티    -<span class="number">0.569071</span></span><br><span class="line">dtype: float64</span><br></pre></td></tr></table></figure>
+
+<img src="/images/2021-02-black-litterman-result.png" class="Async Everywhere" title="BLMResult">
+
+<p>Confidence level이 고려되지 않은 결과보다, 조금 더 설득력 있는 형태의 포트폴리오가 구성되었습니다.</p>
+<hr>
+<h1 id="5-Dealing-with-Constraints"><a href="#5-Dealing-with-Constraints" class="headerlink" title="5. Dealing with Constraints"></a>5. Dealing with Constraints</h1><p>모델의 전체적인 프로세스를 진행하는 과정에서, 포트폴리오의 비중을 구하기 위하여 크게 다음의 두 가지 스텝을 밟았습니다.</p>
+<ul>
+<li>Black-Litterman 모델을 통해 자산별 기대수익률($E[R]$)을 계산하고,</li>
+<li>해당 기대수익률을 기반으로 mean-variance optimization을 적용하여 새로운 비중($\hat{w}$)을 계산했습니다.</li>
+</ul>
+<p>본 포스트에서는 제약조건이 없는 mean-variance optimization(unconstrained maximization optimization process)을 가정하였습니다. ($\hat{w} &#x3D; (\Sigma^{-1}E[R])&#x2F;(1^T\Sigma^{-1}E[R])$) 만약 포트폴리오 구성 시 제약조건(보유비중, 리스크, 베타, long-only portfolio 등)이 있는 경우, 위의 (2)번 프로세스에 제약조건을 더해 mean-variance optimization을 진행하면 되겠습니다. (이 경우 closed-form solution을 구하는 방법보다는, confidence level을 반영하는 과정에서 <code>scipy.optimize</code>를 사용한 것과 비슷하게 numerical solution을 찾는게 효과적일 것으로 판단됩니다.)</p>
+<hr>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>포스트 작성자:  </strong>Hwanghee Kim
+  </li>
+  <li class="post-copyright-link">
+      <strong>Post link: </strong>
+      <a href="https://hwangheek.github.io/2021/black-litterman/" title="Python으로 블랙리터만 (Black-Litterman) 모델 구현하기">https://hwangheek.github.io/2021/black-litterman/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice:  </strong>All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> unless stating additionally.
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Python/" rel="tag"># Python</a>
+              <a href="/tags/Portfolio-Theory/" rel="tag"># Portfolio Theory</a>
+              <a href="/tags/Black-Litterman/" rel="tag"># Black-Litterman</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/neat-xingapi-with-python/" rel="prev" title="Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w/ pandas)">
+                  <i class="fa fa-chevron-left"></i> Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w/ pandas)
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    
+  <div class="comments" id="disqus_thread">
+    <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+  </div>
+  
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hwanghee Kim</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<script class="next-config" data-name="disqus" type="application/json">{"enable":true,"shortname":"blog-w5rrs5lidd","count":true,"i18n":{"disqus":"disqus"}}</script>
+<script src="/js/third-party/comments/disqus.js"></script>
+
+</body>
+</html>

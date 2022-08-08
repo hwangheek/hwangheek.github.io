@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:300,300italic,400,400italic,700,700italic%7CNanum+Gothic+Coding:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hwangheek.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":false,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="0. 안녕, 비동기!Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다…만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐기 때문">
+<meta property="og:type" content="article">
+<meta property="og:title" content="비동기적으로 Python 다루기">
+<meta property="og:url" content="https://hwangheek.github.io/2019/asynchronous-python/index.html">
+<meta property="og:site_name" content="ㅎㅎㅋ">
+<meta property="og:description" content="0. 안녕, 비동기!Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다…만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐기 때문">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:image" content="https://hwangheek.github.io/images/2019-02-why_so_async.png">
+<meta property="og:image" content="https://hwangheek.github.io/images/2019-02-parallelism_concurrency.png">
+<meta property="article:published_time" content="2019-02-04T21:05:38.000Z">
+<meta property="article:modified_time" content="2022-08-08T05:56:40.861Z">
+<meta property="article:author" content="Hwanghee Kim">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hwangheek.github.io/images/2019-02-why_so_async.png">
+
+
+<link rel="canonical" href="https://hwangheek.github.io/2019/asynchronous-python/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"ko","comments":true,"permalink":"https://hwangheek.github.io/2019/asynchronous-python/","path":"2019/asynchronous-python/","title":"비동기적으로 Python 다루기"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>비동기적으로 Python 다루기 | ㅎㅎㅋ</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-132879183-1"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"UA-132879183-1","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ㅎㅎㅋ" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ㅎㅎㅋ</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">ㅎㅎㅋ의 개인 연구실</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-홈"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a></li><li class="menu-item menu-item-아카이브"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-%EC%95%88%EB%85%95-%EB%B9%84%EB%8F%99%EA%B8%B0"><span class="nav-text">0. 안녕, 비동기!</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%EC%84%A0%EC%A7%80%EC%9E%90%EB%93%A4%EC%9D%98-%EA%B8%B0%EB%A1%9D"><span class="nav-text">1. 선지자들의 기록</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Generator"><span class="nav-text">2. Generator</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Coroutine"><span class="nav-text">3. Coroutine</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-Generator-based-%E2%80%98Coroutine%E2%80%99"><span class="nav-text">3-1. Generator based ‘Coroutine’</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-asyncio-Module"><span class="nav-text">3-2. asyncio Module</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-Native-Coroutine"><span class="nav-text">3-3. Native Coroutine</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-Concurrency%EC%99%80-Parallelism"><span class="nav-text">4. Concurrency와 Parallelism</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-More-about-async-await-and-asyncio"><span class="nav-text">5. More about async, await and asyncio</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Awaitable-Objects"><span class="nav-text">Awaitable Objects</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#asyncio-module"><span class="nav-text">asyncio module</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#asyncio-run-coro-debug-False"><span class="nav-text">asyncio.run(coro, *, debug&#x3D;False)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asyncio-create-task-coro"><span class="nav-text">asyncio.create_task(coro)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asyncio-sleep-delay-result-None-loop-None"><span class="nav-text">asyncio.sleep(delay, result&#x3D;None, loop&#x3D;None)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asyncio-gather-aws-loop-None-return-exceptions-None"><span class="nav-text">asyncio.gather(*aws, loop&#x3D;None, return_exceptions&#x3D;None)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asyncio-wait-for-aw-timeout-loop-None"><span class="nav-text">asyncio.wait_for(aw, timeout, *, loop&#x3D;None)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Using-asyncio-based-module-aiohttp"><span class="nav-text">Using asyncio based module : aiohttp</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Hwanghee Kim</p>
+  <div class="site-description" itemprop="description">ㅎㅎㅋ의 개인 연구실</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">카테고리</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">태그</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://www.linkedin.com/in/hwanghee-kim-66a628154/" title="LinkedIn → https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;hwanghee-kim-66a628154&#x2F;" rel="noopener" target="_blank"><i class="linkedin fa-fw"></i>LinkedIn</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdn.jsdelivr.net/npm/@creativecommons/vocabulary@2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://hwangheek.github.io/2019/asynchronous-python/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Hwanghee Kim">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ㅎㅎㅋ">
+      <meta itemprop="description" content="ㅎㅎㅋ의 개인 연구실">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="비동기적으로 Python 다루기 | ㅎㅎㅋ">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          비동기적으로 Python 다루기
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">작성일</span>
+
+      <time title="Post created: 2019-02-05 06:05:38" itemprop="dateCreated datePublished" datetime="2019-02-05T06:05:38+09:00">2019-02-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Updated at: 2022-08-08 14:56:40" itemprop="dateModified" datetime="2022-08-08T14:56:40+09:00">2022-08-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Python/" itemprop="url" rel="index"><span itemprop="name">Python</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/asynchronous-python/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/asynchronous-python/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="0-안녕-비동기"><a href="#0-안녕-비동기" class="headerlink" title="0. 안녕, 비동기!"></a>0. 안녕, 비동기!</h1><p>Python으로 동시다발적 HTTP 요청을 보내는 작업을 해야할 필요가 생겼습니다. Python 3에서 asynchronous한 작업을 처리하기가 수월해졌다는 이야기를 어디서 들은 것 같아서 구글링을 간단히 해봤습니다…만 내용들이 이해하기가 쉽지 않았습니다. 이와 관련된 수 많은 용어들의 정의와 그 범위가 사람들마다 미묘하게 달랐기 때문입니다. 뿐만 아니라, ‘asynchronous’라는 용어 자체를 듣기만 해도 뭔가 어렵고 복잡하고 막연하게 두려운 느낌도 듭니다.</p>
+<img src="/images/2019-02-why_so_async.png" class="" width="500" title="Async Everywhere">
+
+<p>하루 날을 잡고 asynchronous python과 관련된 자료들을 왕창 읽어보았습니다. 이 글은 키워드 <strong>generator, coroutine, asyncio</strong>와 신택스 <strong><code>yield</code>, <code>yield from</code>, <code>async</code>, <code>await</code></strong> 에 대한 이해가 없던 제가, 나름대로 이해를 하는 과정을 기록한 것입니다. <strong>혹시나 제가 잘못 이해하고 있는 부분이 있으면 말씀해주시면 감사하겠습니다</strong>.</p>
+<span id="more"></span>
+
+<h1 id="1-선지자들의-기록"><a href="#1-선지자들의-기록" class="headerlink" title="1. 선지자들의 기록"></a>1. 선지자들의 기록</h1><p>각 단계를 작성하기 위하여 다음과 같은 자료들을 참고하였습니다.</p>
+<ul>
+<li><strong>전반적인 내용과 흐름</strong><ul>
+<li>Masnun (2015) <em><a href="http://masnun.com/2015/11/13/python-generators-coroutines-native-coroutines-and-async-await.html" title="" target="">Python: Generators, Coroutines, Native coroutines and async&#x2F;await</a></em></li>
+</ul>
+</li>
+<li><strong>Generator</strong><ul>
+<li>Syed Komail Abbas (2017) <em><a href="https://hackernoon.com/the-magic-behind-python-generator-functions-bc8eeea54220" title="" target="">The Magic Behind Python Generator Functions</a></em></li>
+</ul>
+</li>
+<li><strong>Coroutine</strong><ul>
+<li>Bharel, Brad Solomon (2018) <em><a href="https://stackoverflow.com/a/51116910" title="" target="">How does asyncio actually work?</a></em></li>
+<li>Moura, A. L. D., &amp; Ierusalimschy, R. (2004) <em><a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.58.4017&rep=rep1&type=pdf" title="" target="">Revisiting coroutines</a></em></li>
+<li>MisterMiyagi (2018) <em><a href="https://stackoverflow.com/a/51177895" title="" target="">Talking about async&#x2F;await and asyncio is not the same thing</a></em></li>
+<li>Brett Cannon (2016) <em><a href="https://snarky.ca/how-the-heck-does-async-await-work-in-python-3-5/" title="" target="">How the heck does async&#x2F;await work in Python 3.5?</a></em></li>
+</ul>
+</li>
+<li><strong>Concurrency와 Parallelism</strong><ul>
+<li>ThomasWouters (2017) <em><a href="https://wiki.python.org/moin/GlobalInterpreterLock" title="" target="">GlobalInterpreterLock</a></em></li>
+<li>Skrew Everything (2018) <em><a href="https://medium.com/from-the-scratch/dont-be-confused-between-concurrency-and-parallelism-eac8e703943a" title="" target="">Don&#39;t be confused between Concurrency and Parallelism</a></em></li>
+</ul>
+</li>
+<li><strong>More about <code>async</code>, <code>await</code> and <code>asyncio</code></strong><ul>
+<li><a target="_blank" rel="noopener" href="https://docs.python.org/3/library/asyncio-task.html">Python Docs ‘Coroutines and Tasks’</a></li>
+<li>Jinsu Kim (2017) <em><a href="https://item4.github.io/2017-11-26/Asynchronous-HTTP-Request-with-aiohttp/" title="" target="">aiohttp로 하는 비동기 HTTP 요청</a></em></li>
+</ul>
+</li>
+<li><strong>Other References</strong><ul>
+<li>YongSung Lee (2018) <em><a href="https://blog.humminglab.io/python-coroutine-programming-1/" title="" target="">Python 비동기 프로그래밍 제대로 이해하기</a></em></li>
+<li>Nick Humrich (2016) <em><a href="https://hackernoon.com/asynchronous-python-45df84b82434" title="" target="">Asynchronous Python - Await the Future</a></em></li>
+<li>Scott Robinson (2015) <em><a href="https://stackabuse.com/python-async-await-tutorial/" title="" target="">Python async&#x2F;await Tutorial</a></em></li>
+<li>불곰 (2017) <em><a href="https://brownbears.tistory.com/237" title="" target="">많은 함수를 동시에 실행하려면 코루틴을 고려</a></em></li>
+<li>Brad Solomon (2019) <em><a href="https://realpython.com/async-io-python/" title="" target="">Async IO in Python: A Complete Walkthrough</a></em></li>
+<li>Miguel Grinberg (2017) <em><a href="https://www.youtube.com/watch?v=iG6fr81xHKA" title="" target="">Asynchronous Python for the Complete Beginner (PyCon 2017)</a></em></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="2-Generator"><a href="#2-Generator" class="headerlink" title="2. Generator"></a>2. Generator</h1><p>우리가 흔히 알고있는 Python의 함수, 즉 <code>def sth_familiar_with(): ...</code>과 같이 정의된 함수를 호출할 경우, 해당 함수의 시작부터 끝(혹은 <code>return</code>을 만날때)까지 진행이 됩니다. 그 뒤에 stack frame은 소멸되므로, 이 함수를 다시 호출할 경우 함수는 처음부터 다시 실행이 됩니다.</p>
+<p>Generator는 약간 다릅니다. 결과물을 그때그때 생성해내는, <strong>일종의 on-demand function</strong> 정도로 생각해볼 수 있겠습니다. 다음의 예시를 보겠습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">def</span> <span class="title function_">hello_twice</span>():</span><br><span class="line"><span class="meta">... </span>  <span class="built_in">print</span> (<span class="string">&#x27;Gonna say hello&#x27;</span>)</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">&#x27;Hello&#x27;</span></span><br><span class="line"><span class="meta">... </span>  <span class="built_in">print</span> (<span class="string">&#x27;Gonna say hello again&#x27;</span>)</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">&#x27;Hello again!&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>gen = hello_twice()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(<span class="built_in">next</span>(gen))</span><br><span class="line">Gonna say hello</span><br><span class="line">Hello</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(<span class="built_in">next</span>(gen))</span><br><span class="line">Gonna say hello again</span><br><span class="line">Hello again!</span><br></pre></td></tr></table></figure>
+
+<p>위와 같이 함수를 정의할 경우, CPython 컴파일러가 함수 내 <code>yield</code> 키워드를 발견합니다. 그리고, 해당 함수를 generator function으로 처리합니다.</p>
+<p>위의 7번 라인과 같이, generator 함수가 호출되면 <strong>generator object</strong>가 생성됩니다. 8번 라인에서 <code>next(gen)</code>을 실행하면, <code>hello_twice</code>의 3번 라인까지 실행이 됩니다. 실행 도중 <code>yield</code> 키워드를 만났을 경우, 해당 함수의 실행은 일시적으로 보류된 후 값을 return 합니다. 다시 <code>next(gen)</code>을 실행할 경우 (라인 12), 일시 보류되었던 함수의 진행이, 다음 <code>yield</code>문을 만날때까지 계속됩니다. (라인 4~5) 이 과정이 함수의 끝에 도달할 때 까지 반복됩니다.</p>
+<p><strong>Python의 stack frame은 (이름과 다르게) 메모리의 stack 영역에 올라가는 것이 아니라, heap 영역에 할당됩니다.</strong> 이러한 Python의 특징 덕분에, generator가 실행을 일시정지하고 값을 return할 때에 stack frame을 유지할 수 있습니다. 함수가 <code>yield</code>를 만나는 순간, 해당 stack frame과 코드를 어디서부터 재개할지에 대한 정보(last instruction pointer)를 보관하는 것입니다. <em>(Syed Komail Abbas)</em></p>
+<h1 id="3-Coroutine"><a href="#3-Coroutine" class="headerlink" title="3. Coroutine"></a>3. Coroutine</h1><p>일단, ‘Coroutine’이라는 용어가 Python-specific keyword가 아니라는 사실을 인지할 필요가 있을 것 같습니다.</p>
+<blockquote><p><strong>Coroutines</strong> are computer-program components that generalize subroutines for <strong>non-preemptive multitasking</strong>, by allowing <strong>multiple entry points for suspending and resuming execution</strong> at certain locations.</p>
+<footer><strong>wikipedia</strong><cite><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Coroutine">Coroutine</a></cite></footer></blockquote>
+
+<p>따라서, 질문을 “Python의 coroutine은 무엇인가?”로 잡는 것 보다는, <strong>“Python에서는 coroutine을 어떻게 구현하였나?”</strong> 로 생각하는 쪽이 혼선을 줄이는 방향이라고 생각합니다.</p>
+<h2 id="3-1-Generator-based-‘Coroutine’"><a href="#3-1-Generator-based-‘Coroutine’" class="headerlink" title="3-1. Generator based ‘Coroutine’"></a>3-1. Generator based ‘Coroutine’</h2><p>Python이 가지고 있는 generator를 이용한다면, coroutine을 구현할 수 있어 보입니다. 함수 실행을 일시정지하거나 재개할 수 있는 entry point들이 존재한다는 점과, 그 때마다 값을 yield 할 수 있는 generator의 성질을 잘 이용하는 것이지요.</p>
+<p>Python generator와 관련한 두가지 기능을 더 살펴봅시다. 하나는 <strong>yield되어 실행이 일시정지 되어있는 generator에게 값을 전달하는 기능</strong>입니다. 아래의 예시를 보겠습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">def</span> <span class="title function_">echo_me</span>():</span><br><span class="line"><span class="meta">... </span>  msg_first = <span class="keyword">yield</span> <span class="string">&#x27;Ready to echo&#x27;</span></span><br><span class="line"><span class="meta">... </span>  msg_second = <span class="keyword">yield</span> msg_first</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> msg_second</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>gen = echo_me()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(<span class="built_in">next</span>(gen))</span><br><span class="line">Ready to echo</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(gen.send(<span class="string">&#x27;Hello&#x27;</span>))</span><br><span class="line">Hello</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(gen.send(<span class="string">&#x27;There!&#x27;</span>))</span><br><span class="line">There!</span><br></pre></td></tr></table></figure>
+
+<p><code>gen.send(&#39;Hello&#39;)</code>로 인해 generator의 실행이 재개 될 경우, <code>yield msg_first</code> 신택스 자체가 <code>&#39;Hello&#39;</code>로 처리됩니다. 이처럼, 실행이 멈춰있는 generator object의 <code>send</code> method를 호출함으로써, generator에게 데이터를 전달할 수 있습니다.</p>
+<p>다른 하나는, <strong>generator에서 다른 generator를 yield하는 기능</strong>입니다. 이는 <a href="https://www.python.org/dev/peps/pep-0380/" title="" target="">PEP380 (Syntax for Delegating to a Subgenerator)</a>에 명시되어있습니다. 아래의 예시를 보겠습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">def</span> <span class="title function_">inner</span>():</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">&#x27;INNER&#x27;</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">&#x27;GENERATOR&#x27;</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">&#x27;YEAH!&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">def</span> <span class="title function_">outer</span>():</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="string">&#x27;Get ready for ...&#x27;</span></span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="keyword">from</span> inner()</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>gen = outer()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(<span class="built_in">next</span>(gen))</span><br><span class="line">Get ready <span class="keyword">for</span> ...</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span>(<span class="built_in">next</span>(gen), <span class="built_in">next</span>(gen), <span class="built_in">next</span>(gen))</span><br><span class="line">INNER GENERATOR YEAH!</span><br></pre></td></tr></table></figure>
+
+<p>라인 8과 같이 <code>yield from</code> 키워드를 사용하여 generator 내부에서도 다른 generator를 생성하여 yield를 사용할 수 있습니다. 즉, <code>yield from inner()</code>는 <code>for x from inner(): yield x</code>와 같은 역할을 하는 셈입니다. PEP380에 따르면, 이 신택스는 Python 3.3부터 추가되었다고 합니다. (따라서, Python 2.7에서 위의 예시를 실행하면 <code>yield from</code> 신택스를 이해하지 못하고 에러가 발생합니다.)</p>
+<p>위에서 정의된 <code>echo_me</code>와 <code>inner</code>, <code>outer</code>는 일종의 coroutine입니다. (실행을 일시정지하고 재개할 수 있는 entry points들이 존재하기 때문입니다.) Generator를 이용하여 만들었으므로, ‘generator based coroutine’라고 생각할 수 있겠습니다. (여기까지는 generator와 coroutine이라는 용어의 구분이 명확하지 않습니다.)</p>
+<p>이러한 generator based coroutine들이 값을 yield 할 경우, 항상 자신의 caller에게로 실행의 순서가 넘어가게 됩니다. 이러한 coroutine을 <strong>‘Asymmetric coroutine’</strong> 이라고 부르기도 합니다. 이와 구분되는 개념인 ‘Symmetric coroutine’의 경우에는 하나의 coroutine에서 값을 yield할 때, 다른 coroutine에게 실행 순서를 넘겨줄 수 있는 통제권을 가지고 있습니다. 무조건 자신의 caller에게 실행 순서를 넘겨주어야 하는 asymmetric coroutine과는 다르죠. <em>(Moura)</em></p>
+<h2 id="3-2-asyncio-Module"><a href="#3-2-asyncio-Module" class="headerlink" title="3-2. asyncio Module"></a>3-2. asyncio Module</h2><p>무조건 caller와만 상호작용하는 반쪽짜리 coroutine이라니…. 만약 caller가 이러한 asymmetric coroutine들을 유기적으로 엮어주는 역할을 해준다면 (예를 들면 하나의 coroutine이 suspend 되었을 때 다른 coroutine을 실행시켜주는 역할을 해준다면), 전체적으로 보았을 때 각각의 coroutine들이 서로에게 실행 순서를 넘겨주는 것 처럼 보일 수 있겠습니다.</p>
+<p><strong>asyncio</strong> 모듈이 이러한 역할을 해줍니다. 아래의 예시를 보겠습니다. <a href="https://docs.python.org/3/library/asyncio-task.html#coroutines" title="" target="">asyncio docs의 예시</a> 중 하나를 참고하였습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>@asyncio.coroutine</span><br><span class="line"><span class="meta">... </span><span class="keyword">def</span> <span class="title function_">echo_twice</span>(<span class="params">msg</span>):</span><br><span class="line"><span class="meta">... </span>  <span class="built_in">print</span>(msg)</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">yield</span> <span class="keyword">from</span> asyncio.sleep(<span class="number">1</span>)</span><br><span class="line"><span class="meta">... </span>  <span class="built_in">print</span>(msg)</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>loop = asyncio.get_event_loop()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>asyncio.ensure_future(echo_twice(<span class="string">&#x27;Hello&#x27;</span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>asyncio.ensure_future(echo_twice(<span class="string">&#x27;There&#x27;</span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>loop.run_forever()</span><br><span class="line">Hello</span><br><span class="line">There</span><br><span class="line"><span class="comment"># 주춤...</span></span><br><span class="line">Hello</span><br><span class="line">There</span><br></pre></td></tr></table></figure>
+
+<p><code>asyncio.coroutine</code> 데코레이터를 통해 <code>echo_twice</code> 함수를 coroutine으로 정의합니다. <code>asyncio.ensure_future(...)</code>를 통해, 실행할 coroutine을 생성합니다. <code>asyncio.get_event_loop()</code>로 받은 event loop의 <code>run_forever</code>를 실행함으로써 coroutine들을 실행합니다.</p>
+<p>출력된 메시지를 확인해보면, 두 개의 coroutine이 동시에 진행된 것을 확인할 수 있습니다. <code>echo_twice</code> coroutine 실행 중 라인 5에 다다르면 <code>asyncio.sleep(1)</code>이 1초 뒤에 실행이 완료되는 (1초 뒤에 yield할 수 있는) coroutine을 생성합니다. 이 coroutine을 <code>yield from</code>하게 되면 event loop에게로 통제권이 넘어가고, event loop에 의해서 다른 coroutine이 실행됩니다. <em>(Mansnun)</em></p>
+<p>이러한 방법을 통해, 여러 coroutine들이 동시에 실행될 수 있습니다. 여기서 말하는 ‘동시에’ 실행된다는 말은 parallelly가 아니라 concurrently를 의미합니다. <strong>Event loop은 single thread이므로 한번에 실행 되는 coroutine은 하나입니다.</strong> 여러 coroutine들이 하나의 thread를 타이밍 좋게 나누어 가지는 셈입니다. <em>(Masnun)</em> Concurrency에 관한 이야기와 <code>asyncio</code>에 관한 조금 더 디테일한 설명은 뒤에서 다시 하겠습니다.</p>
+<h2 id="3-3-Native-Coroutine"><a href="#3-3-Native-Coroutine" class="headerlink" title="3-3. Native Coroutine"></a>3-3. Native Coroutine</h2><p>Python 3.5부터 새로운 신택스인 <strong><code>async</code></strong> 와 <strong><code>await</code></strong> 가 등장합니다. (<a href="https://www.python.org/dev/peps/pep-0492/" title="" target="">PEP492</a>) 이를 이용하면 위에서 선언한 <code>echo_twice</code>를 아래와 같이 다시 정의할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">echo_twice</span>(<span class="params">msg</span>):</span><br><span class="line"><span class="meta">... </span>  <span class="built_in">print</span>(msg)</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">await</span> asyncio.sleep(<span class="number">1</span>)</span><br><span class="line"><span class="meta">... </span>  <span class="built_in">print</span>(msg)</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>loop = asyncio.get_event_loop()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>asyncio.ensure_future(echo_twice(<span class="string">&#x27;Hello&#x27;</span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>asyncio.ensure_future(echo_twice(<span class="string">&#x27;There&#x27;</span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>loop.run_forever()</span><br><span class="line">Hello</span><br><span class="line">There</span><br><span class="line"><span class="comment"># 주춤...</span></span><br><span class="line">Hello</span><br><span class="line">There</span><br></pre></td></tr></table></figure>
+
+<p><code> @asyncio.coroutine</code> 데코레이터 대신 <code>async</code> 키워드를, <code>yield from</code> 키워드 대신 <code>await</code> 키워드를 사용했습니다. Python의 신택스만을 이용하여 정의한 coroutine이니, 이를 <strong>‘Native Coroutine’</strong> 이라고 불러도 괜찮겠습니다. <em>(Masnun)</em> 실행 도중 라인 4의 <code>await asyncio.sleep(1)</code>에 다다르면, <code>echo_twice</code> 함수는 event loop에게 컨트롤을 넘겨줍니다.<br>이 때, generator based coroutine에서 사용되는 신택스와 native coroutine에서 사용되는 신택스는 혼용될 수 없습니다. 따라서, 아래와 같은 코드는 허용되지 않습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>@asyncio.coroutine</span><br><span class="line"><span class="meta">... </span><span class="keyword">def</span> <span class="title function_">this_is_nono</span>():</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">await</span> asyncio.sleep(<span class="number">2</span>)</span><br><span class="line">...</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">3</span></span><br><span class="line">SyntaxError: <span class="string">&#x27;await&#x27;</span> outside <span class="keyword">async</span> function</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">this_is_nono</span>():</span><br><span class="line"><span class="meta">... </span>    <span class="keyword">yield</span> <span class="keyword">from</span> asyncio.sleep(<span class="number">2</span>)</span><br><span class="line">...</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">2</span></span><br><span class="line">SyntaxError: <span class="string">&#x27;yield from&#x27;</span> inside <span class="keyword">async</span> function</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-Concurrency와-Parallelism"><a href="#4-Concurrency와-Parallelism" class="headerlink" title="4. Concurrency와 Parallelism"></a>4. Concurrency와 Parallelism</h1><p>CPython의 메모리 관리는 thread-safe하지 않습니다. 따라서 GIL(Global Interpreter Lock)이라 불리는 mutex를 사용하여 여러 쓰레드가 동시에 Python 코드를 실행하지 못하도록 보호합니다. <em>(ThomasWouters)</em></p>
+<p>여기서 머리가 복잡해졌습니다. 그럼 위에서 말했던 동시에 실행되는 coroutine은 어떻게 ‘동시에’ 돌아갈 수 있는 것일까요? 이를 잘 이해하기 위해서는 concurrency와 parallelism을 구분하여 정의내릴 필요가 있습니다.</p>
+<blockquote><p><strong>Concurrency</strong> is about <em>dealing with lots of things at once</em><br><strong>Parallelism</strong> is about <em>doing lots of things at once</em></p>
+<footer><strong>Skrew Everything</strong><cite><a target="_blank" rel="noopener" href="https://medium.com/from-the-scratch/dont-be-confused-between-concurrency-and-parallelism-eac8e703943a">Don't be confused between Concurrency and Parallelism</a></cite></footer></blockquote>
+
+<p>두 용어는 다른 차원의 개념입니다. <strong>Parallelism</strong>은 하나의 작업이 여러개의 작은 작업들로 나뉘어져 물리적으로 동시에 진행되는 것을 말합니다. 여러개의 CPU가 동시에 돌아가는 것을 생각하면 되겠습니다. 반면, <strong>Concurrency</strong>는 여러 작업들이 같은 순간에 (<strong>physically or logically</strong>) 처리되고 있는 상태입니다.</p>
+<p>이 정의를 통해 알 수 있는 사실이 몇 가지 있습니다.</p>
+<ol>
+<li>Single Thread 환경에서도 concurrent한 작업을 수행할 수 있다. (CPU time-slicing 혹은 Application level의 scheduling을 활용)</li>
+<li>Parallel한 작업은 Concurrent하다. 그 반대는 항상 성립하지 않는다. <em>(Skrew Everything)</em></li>
+</ol>
+<p><strong>Python의 coroutine들은 concurrent하게 실행됩니다. Parallel하게 돌아가는 것이 아닙니다.</strong> 앞서 이야기 했듯이, Python은 GIL로 인하여 한번에 하나의 thread만 실행이 됩니다. 따라서, 위에서 이야기 했던 asynchronous한 coroutine들은 ‘One process, One thread’ 환경에서 concurrent하게 돌아가는 것입니다. 아래는 <a href="https://medium.com/from-the-scratch/dont-be-confused-between-concurrency-and-parallelism-eac8e703943a" title="" target="">Skrew Everthing님의 포스트</a>에 삽입된 Parallelism과 Concurrency without Parallelism을 시각화한 그림입니다. Python의 GIL을 고려하였을 때, 그림의 아랫부분에 있는 <em>Concurrency without Parallelism</em>이 Python에서의 coroutine들의 동작 형태와 유사하다고 볼 수 있습니다.</p>
+<img src="/images/2019-02-parallelism_concurrency.png" class="" width="500" title="Parallelism &amp; Concurrency">
+
+<p>그러므로, <strong>“하나의 작업을 여러개의 coroutine으로 나누어 실행 할 경우 작업이 빨라진다”라는 statement는 항상 옳지 않습니다.</strong> ‘One process, One thread’ 환경에서 돌아가기 때문에, <del>coroutine을 context switching하는 cost로 인하여</del> coroutine 스케쥴링 오버헤드로 인하여 경우에 따라서는 performance가 더 나빠질 가능성도 있습니다.</p>
+<hr>
+<h1 id="5-More-about-async-await-and-asyncio"><a href="#5-More-about-async-await-and-asyncio" class="headerlink" title="5. More about async, await and asyncio"></a>5. More about <code>async</code>, <code>await</code> and <code>asyncio</code></h1><h2 id="Awaitable-Objects"><a href="#Awaitable-Objects" class="headerlink" title="Awaitable Objects"></a>Awaitable Objects</h2><p><strong><code>__await__()</code> method가 구현되어 있는 object</strong>를 awaitable object라고 합니다. (<a target="_blank" rel="noopener" href="https://docs.python.org/3/reference/datamodel.html#coroutines">Python Docs</a>) 이름 그대로, <code>await</code> 될 수 있는 object를 의미합니다. <strong>Coroutines</strong>, <strong>Tasks</strong>, <strong>Futures</strong>가 awaitable object에 속합니다.</p>
+<p><strong>Coroutines</strong><br>앞서 설명한 coroutine들은 awaitable object입니다. 따라서, 다른 coroutine에서 <code>await</code> 될 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">coro</span>():</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&#x27;hello from coro!&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main_coroutines</span>():</span><br><span class="line">  coro() <span class="comment"># Coroutine object입니다. 하지만 await 되지 않았으므로 실행되지는 않습니다.</span></span><br><span class="line">  <span class="built_in">print</span>(<span class="keyword">await</span> coro()) <span class="comment"># 이 경우, `await coro()` 가 인사를 합니다.</span></span><br><span class="line"></span><br><span class="line">asyncio.run(main_coroutines())</span><br></pre></td></tr></table></figure>
+
+<p><strong>Futures</strong><br>Future는 비동기 연산의 결과물을 대신하는 low-level awaitable object입니다. <em>(A Future is a special low-level awaitable object that represents an eventual result of an asynchronous operation. &#x2F; Represents the result of an asynchronous computation.)</em><br>Future object가 <code>await</code>될 경우, 다른 곳에서 resolve 되기 전 까지 해당 coroutine이 기다리게 됩니다. <strong>일반적인 경우, application level 코드에서 Future object를 생성 할 필요는 없습니다.</strong></p>
+<p><strong>Tasks</strong><br>Task는 coroutine을 concurrent하게 실행하기 위하여 schedule을 해 놓은 object입니다. <code>asyncio.create_task()</code> 함수 등을 이용하여 coroutine을 Task로 wrapping 할 경우, 해당 coroutine은 자동적으로 schedule 되어서 실행 가능한 상태가 됩니다. 따라서, 위의 <code>main_coroutines()</code>에서는 <code>main_coroutine()</code>과 <code>coro()</code>가 concurrent하게 돌아가지 않지만, 아래의 <code>main_tasks()</code>에서는 <code>main_tasks()</code>와 <code>coro()</code>가 concurrent하게 실행될 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">coro</span>():</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&#x27;hello from coro!&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main_tasks</span>():</span><br><span class="line">  task = asyncio.create_task(coro()) <span class="comment"># `coro()` coroutine과 `main_tasks()` coroutine이</span></span><br><span class="line">                                     <span class="comment"># concurrent하게 돌아갈 수 있도록 scheduling 합니다</span></span><br><span class="line">  </span><br><span class="line">  <span class="built_in">print</span>(<span class="keyword">await</span> task) <span class="comment"># `await task` 가 인사를 합니다.</span></span><br><span class="line"></span><br><span class="line">asyncio.run(main_tasks())</span><br></pre></td></tr></table></figure>
+
+<h2 id="asyncio-module"><a href="#asyncio-module" class="headerlink" title="asyncio module"></a><code>asyncio</code> module</h2><p><code>asyncio</code>의 method 중 핵심적인 몇 가지를 정리해보면 아래와 같습니다.</p>
+<h3 id="asyncio-run-coro-debug-False"><a href="#asyncio-run-coro-debug-False" class="headerlink" title="asyncio.run(coro, *, debug=False)"></a><code>asyncio.run(coro, *, debug=False)</code></h3><p>전달 된 coroutine을 실행하고, asyncio의 event loop를 관리합니다. 같은 thread에서 다른 asyncio event loop가 실행중일 경우에는 실행할 수 없습니다.<br><em>Python 3.7에서 새로 추가되었습니다.</em></p>
+<h3 id="asyncio-create-task-coro"><a href="#asyncio-create-task-coro" class="headerlink" title="asyncio.create_task(coro)"></a><code>asyncio.create_task(coro)</code></h3><p>전달 된 coroutine을 wrapping하여 Task object를 만들고 schedule 합니다.<br><em>Python 3.7에서 새로 추가되었습니다.</em> 이전 Python에서는 <code>asyncio.ensure_future()</code>를 사용합니다.</p>
+<h3 id="asyncio-sleep-delay-result-None-loop-None"><a href="#asyncio-sleep-delay-result-None-loop-None" class="headerlink" title="asyncio.sleep(delay, result=None, loop=None)"></a><code>asyncio.sleep(delay, result=None, loop=None)</code></h3><p><code>delay</code>초 동안 대기합니다. <code>result</code>가 주어진 경우, sleep이 완료된 후 해당 값을 caller에게 리턴합니다.<br><code>sleep()</code> 함수는 현재 task를 suspend 시키므로, 이 시점에 다른 task가 실행될 수 있습니다.</p>
+<h3 id="asyncio-gather-aws-loop-None-return-exceptions-None"><a href="#asyncio-gather-aws-loop-None-return-exceptions-None" class="headerlink" title="asyncio.gather(*aws, loop=None, return_exceptions=None)"></a><code>asyncio.gather(*aws, loop=None, return_exceptions=None)</code></h3><p>주어진 awaitable objects들을 concurrent하게 실행합니다. 주어진 awaitable object 중 coroutine이 있으면, 자동으로 Task로 schedule 됩니다.<br>모든 awaitable들이 정상적으로 끝나면, 각 awaitable의 return value의 list가 return 됩니다. 순서는 <code>aws</code>의 순서와 동일합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">whoami_after_sleep</span>(<span class="params">name, t</span>):</span><br><span class="line">  <span class="built_in">print</span>(<span class="string">f&#x27;I am <span class="subst">&#123;name&#125;</span> and gonna sleep for <span class="subst">&#123;t&#125;</span> seconds.&#x27;</span>)</span><br><span class="line">  <span class="keyword">await</span> asyncio.sleep(t)</span><br><span class="line">  <span class="built_in">print</span>(<span class="string">f&#x27;I am <span class="subst">&#123;name&#125;</span>. I slept for <span class="subst">&#123;t&#125;</span> seconds.&#x27;</span>)</span><br><span class="line">  <span class="keyword">return</span> (<span class="string">&#x27;result&#x27;</span>, name, t)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">  <span class="keyword">await</span> asyncio.gather(</span><br><span class="line">    whoami_after_sleep(<span class="string">&#x27;A&#x27;</span>, <span class="number">1</span>),</span><br><span class="line">    whoami_after_sleep(<span class="string">&#x27;B&#x27;</span>, <span class="number">2</span>),</span><br><span class="line">    whoami_after_sleep(<span class="string">&#x27;C&#x27;</span>, <span class="number">3</span>),</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">asyncio.run(main())</span><br><span class="line"><span class="comment"># I am A and gonna sleep for 1 seconds.</span></span><br><span class="line"><span class="comment"># I am B and gonna sleep for 2 seconds.</span></span><br><span class="line"><span class="comment"># I am C and gonna sleep for 3 seconds.</span></span><br><span class="line"><span class="comment"># I am A. I slept for 1 seconds.</span></span><br><span class="line"><span class="comment"># I am B. I slept for 2 seconds.</span></span><br><span class="line"><span class="comment"># I am C. I slept for 3 seconds.</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="asyncio-wait-for-aw-timeout-loop-None"><a href="#asyncio-wait-for-aw-timeout-loop-None" class="headerlink" title="asyncio.wait_for(aw, timeout, *, loop=None)"></a><code>asyncio.wait_for(aw, timeout, *, loop=None)</code></h3><p>주어진 awaitable을 <code>timeout</code>초 동안 기다립니다. <code>aw</code>가 coroutine일 경우, 자동으로 Task로 schedule 됩니다.<br>해당 시간이 지나면, <code>asyncio.TimeoutError</code>가 발생합니다.</p>
+<p>…</p>
+<p>추가적인 설명은 <a target="_blank" rel="noopener" href="https://docs.python.org/3/library/asyncio-task.html">Python Doc</a>을 참조하면 되겠습니다.</p>
+<h2 id="Using-asyncio-based-module-aiohttp"><a href="#Using-asyncio-based-module-aiohttp" class="headerlink" title="Using asyncio based module : aiohttp"></a>Using <code>asyncio</code> based module : <code>aiohttp</code></h2><p><strong>aiohttp</strong>는 asyncio를 활용한 HTTP 클라이언트&#x2F;서버 모듈입니다. 이 모듈과 위의 내용들을 바탕으로 다수의 웹사이트를 불러오는 asynchronous를 만들어보면 다음과 같습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> aiohttp</span><br><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">urls = [<span class="string">&#x27;https://jsonplaceholder.typicode.com/posts/&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(<span class="built_in">id</span>) <span class="keyword">for</span> <span class="built_in">id</span> <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">101</span>)]</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">fetch</span>(<span class="params">url</span>):</span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&#x27;start fetching&#x27;</span>, url)</span><br><span class="line">  <span class="keyword">async</span> <span class="keyword">with</span> aiohttp.ClientSession() <span class="keyword">as</span> session:</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> session.get(url) <span class="keyword">as</span> res:</span><br><span class="line">      <span class="keyword">assert</span> res.status == <span class="number">200</span></span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">await</span> res.text()</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">  <span class="keyword">await</span> asyncio.gather(*[fetch(url) <span class="keyword">for</span> url <span class="keyword">in</span> urls])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">start = time.perf_counter()</span><br><span class="line">asyncio.run(main())</span><br><span class="line">end = time.perf_counter()</span><br><span class="line"><span class="built_in">print</span> (<span class="string">&#x27;Time Elapsed : &#123;&#125; sec&#x27;</span>.<span class="built_in">format</span>(end-start)) <span class="comment"># 1.61 sec</span></span><br></pre></td></tr></table></figure>
+<p>이와 같은 동작을 하는 synchronous한 스크립트는 시간이 얼마나 걸릴까요? 아래와 같이 간단한 테스트를 해보았습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">urls = [<span class="string">&#x27;https://jsonplaceholder.typicode.com/posts/&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(<span class="built_in">id</span>) <span class="keyword">for</span> <span class="built_in">id</span> <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">101</span>)]</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">  <span class="keyword">with</span> requests.Session() <span class="keyword">as</span> client:</span><br><span class="line">    <span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">      res = client.get(url)</span><br><span class="line">      <span class="keyword">assert</span> res.status_code == <span class="number">200</span></span><br><span class="line">      <span class="built_in">print</span>(res.status_code)</span><br><span class="line"></span><br><span class="line">start = time.perf_counter()</span><br><span class="line">main()</span><br><span class="line">end = time.perf_counter()</span><br><span class="line"><span class="built_in">print</span> (<span class="string">&#x27;Time Elapsed : &#123;&#125; sec&#x27;</span>.<span class="built_in">format</span>(end-start)) <span class="comment"># 10.41 sec</span></span><br></pre></td></tr></table></figure>
+
+<p>잘 짜여진 테스트는 아니지만, 10.41초에서 1.61초로 소요 시간이 크게 줄어들었음을 확인할 수 있습니다. 작업의 I&#x2F;O 대기시간이 길어질수록 이러한 접근 방법은 더욱 더 효과적입니다.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>포스트 작성자:  </strong>Hwanghee Kim
+  </li>
+  <li class="post-copyright-link">
+      <strong>Post link: </strong>
+      <a href="https://hwangheek.github.io/2019/asynchronous-python/" title="비동기적으로 Python 다루기">https://hwangheek.github.io/2019/asynchronous-python/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice:  </strong>All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> unless stating additionally.
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Python/" rel="tag"># Python</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/python-logging/" rel="next" title="조금 더 체계적인 Python Logging">
+                  조금 더 체계적인 Python Logging <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    
+  <div class="comments" id="disqus_thread">
+    <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+  </div>
+  
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hwanghee Kim</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<script class="next-config" data-name="disqus" type="application/json">{"enable":true,"shortname":"blog-w5rrs5lidd","count":true,"i18n":{"disqus":"disqus"}}</script>
+<script src="/js/third-party/comments/disqus.js"></script>
+
+</body>
+</html>
