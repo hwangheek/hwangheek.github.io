@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:300,300italic,400,400italic,700,700italic%7CNanum+Gothic+Coding:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hwangheek.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":false,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="0. Introduction이베스트증권은 COM 형태와 dll 형태로 사용할 수 있는 xingAPI를 제공합니다. Python에서 COM object를 사용하는 라이브러리를 사용하면 xingAPI를 사용할 수 있지만, 사용법이 깔끔하지 못합니다.   개인적으로 사용하기 위하여 설탕을 팍팍쳐서 모듈을 만들었습니다. 이 모듈을 사용하면, 코드가 다음과 같이 정">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w&#x2F; pandas)">
+<meta property="og:url" content="https://hwangheek.github.io/2021/neat-xingapi-with-python/index.html">
+<meta property="og:site_name" content="ㅎㅎㅋ">
+<meta property="og:description" content="0. Introduction이베스트증권은 COM 형태와 dll 형태로 사용할 수 있는 xingAPI를 제공합니다. Python에서 COM object를 사용하는 라이브러리를 사용하면 xingAPI를 사용할 수 있지만, 사용법이 깔끔하지 못합니다.   개인적으로 사용하기 위하여 설탕을 팍팍쳐서 모듈을 만들었습니다. 이 모듈을 사용하면, 코드가 다음과 같이 정">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:image" content="https://hwangheek.github.io/images/2021-01-syntactic-sugar.jpg">
+<meta property="article:published_time" content="2021-01-04T09:38:14.000Z">
+<meta property="article:modified_time" content="2023-12-19T08:07:29.970Z">
+<meta property="article:author" content="Hwanghee Kim">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="System Trading">
+<meta property="article:tag" content="ebest">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hwangheek.github.io/images/2021-01-syntactic-sugar.jpg">
+
+
+<link rel="canonical" href="https://hwangheek.github.io/2021/neat-xingapi-with-python/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"ko","comments":true,"permalink":"https://hwangheek.github.io/2021/neat-xingapi-with-python/","path":"2021/neat-xingapi-with-python/","title":"Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w/ pandas)"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w/ pandas) | ㅎㅎㅋ</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-132879183-1"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"UA-132879183-1","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ㅎㅎㅋ" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ㅎㅎㅋ</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">ㅎㅎㅋ의 개인 연구실</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-홈"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>홈</a></li><li class="menu-item menu-item-아카이브"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>아카이브</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          목차
+        </li>
+        <li class="sidebar-nav-overview">
+          흝어보기
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-Introduction"><span class="nav-text">0. Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Requirements"><span class="nav-text">1. Requirements</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%EC%82%AC%EC%9A%A9-%EA%B0%80%EB%8A%A5%ED%95%9C-res-%ED%8C%8C%EC%9D%BC-%EC%A0%95%EB%B3%B4-%EC%9D%BD%EC%96%B4%EC%98%A4%EA%B8%B0"><span class="nav-text">2. 사용 가능한 res 파일 정보 읽어오기</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%EC%84%9C%EB%B2%84%EC%97%90-%EC%A0%91%EC%86%8D%ED%95%98%EA%B8%B0-XASession"><span class="nav-text">3. 서버에 접속하기 : XASession</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%9A%94%EC%B2%AD%ED%95%98%EA%B8%B0-XAQuery"><span class="nav-text">4. 데이터 요청하기 : XAQuery</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-Wrapper-Functions"><span class="nav-text">5. Wrapper Functions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%EC%8B%A4%EC%8B%9C%EA%B0%84-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EA%B5%AC%EB%8F%85%ED%95%98%EA%B8%B0-XAReal"><span class="nav-text">6. 실시간 데이터 구독하기 : XAReal</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Hwanghee Kim</p>
+  <div class="site-description" itemprop="description">ㅎㅎㅋ의 개인 연구실</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">포스트</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">카테고리</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">태그</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://www.linkedin.com/in/hwanghee-kim-66a628154/" title="LinkedIn → https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;hwanghee-kim-66a628154&#x2F;" rel="noopener" target="_blank"><i class="linkedin fa-fw"></i>LinkedIn</a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdn.jsdelivr.net/npm/@creativecommons/vocabulary@2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="ko">
+    <link itemprop="mainEntityOfPage" href="https://hwangheek.github.io/2021/neat-xingapi-with-python/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Hwanghee Kim">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ㅎㅎㅋ">
+      <meta itemprop="description" content="ㅎㅎㅋ의 개인 연구실">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w/ pandas) | ㅎㅎㅋ">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w/ pandas)
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">작성일</span>
+
+      <time title="Post created: 2021-01-04 18:38:14" itemprop="dateCreated datePublished" datetime="2021-01-04T18:38:14+09:00">2021-01-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Updated at: 2023-12-19 17:07:29" itemprop="dateModified" datetime="2023-12-19T17:07:29+09:00">2023-12-19</time>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2021/neat-xingapi-with-python/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2021/neat-xingapi-with-python/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="0-Introduction"><a href="#0-Introduction" class="headerlink" title="0. Introduction"></a>0. Introduction</h1><p>이베스트증권은 COM 형태와 dll 형태로 사용할 수 있는 xingAPI를 제공합니다. Python에서 COM object를 사용하는 라이브러리를 사용하면 xingAPI를 사용할 수 있지만, 사용법이 깔끔하지 못합니다.</p>
+<img src="/images/2021-01-syntactic-sugar.jpg" class="Put some sugar on that" width="500" title="Sugar">
+
+<p>개인적으로 사용하기 위하여 설탕을 팍팍쳐서 모듈을 만들었습니다. 이 모듈을 사용하면, 코드가 다음과 같이 정리가 됩니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> ebest</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ebest.login()</span><br><span class="line">[*] 접속 서버 ((r)eal / (D)emo / (a)ce) : <span class="comment"># r</span></span><br><span class="line">[*] 아이디 : <span class="comment"># username</span></span><br><span class="line">[*] 패스워드 : <span class="comment"># password</span></span><br><span class="line">[*] 공인인증서 암호 : <span class="comment"># cert_password</span></span><br><span class="line">[*] 로그인 성공</span><br><span class="line"></span><br><span class="line"><span class="comment"># XAQuery 요청</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ebest.query(<span class="string">&#x27;t1101&#x27;</span>, <span class="built_in">dict</span>(shcode=<span class="string">&#x27;000020&#x27;</span>))</span><br><span class="line">&#123;<span class="string">&#x27;t1101OutBlock&#x27;</span>: &#123;<span class="string">&#x27;hname&#x27;</span>: <span class="string">&#x27;동화약품&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;price&#x27;</span>: <span class="number">19100</span>,</span><br><span class="line">  <span class="string">&#x27;sign&#x27;</span>: <span class="string">&#x27;5&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;change&#x27;</span>: <span class="number">550</span>,</span><br><span class="line">  <span class="comment"># ...</span></span><br><span class="line">  <span class="string">&#x27;open&#x27;</span>: <span class="number">19750</span>,</span><br><span class="line">  <span class="string">&#x27;high&#x27;</span>: <span class="number">19900</span>,</span><br><span class="line">  <span class="string">&#x27;low&#x27;</span>: <span class="number">18850</span>&#125;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># XAQuery 요청 후 DataFrame 형태로 변환</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>res = query(<span class="string">&#x27;t8413&#x27;</span>, <span class="built_in">dict</span>(</span><br><span class="line"><span class="meta">... </span>  shcode=<span class="string">&#x27;000020&#x27;</span>, sdate=<span class="string">&#x27;20200101&#x27;</span>, edate=<span class="string">&#x27;20210101&#x27;</span>,</span><br><span class="line"><span class="meta">... </span>  gubun=<span class="string">&#x27;2&#x27;</span>, qrycnt=<span class="number">2000</span>, cts_date=<span class="string">&#x27; &#x27;</span>, comp_yn=<span class="string">&#x27;Y&#x27;</span></span><br><span class="line"><span class="meta">... </span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>pd.DataFrame(res.get(<span class="string">&#x27;t8413OutBlock1&#x27;</span>)).set_index(<span class="string">&#x27;date&#x27;</span>)</span><br><span class="line">           <span class="built_in">open</span>   high    low  close  ...  rate  pricechk  ratevalue  sign</span><br><span class="line">date                                  ...                                 </span><br><span class="line"><span class="number">20200102</span>   <span class="number">8340</span>   <span class="number">8400</span>   <span class="number">8290</span>   <span class="number">8400</span>  ...   <span class="number">0.0</span>         <span class="number">0</span>          <span class="number">0</span>     <span class="number">2</span></span><br><span class="line"><span class="number">20200103</span>   <span class="number">8400</span>   <span class="number">8450</span>   <span class="number">8290</span>   <span class="number">8360</span>  ...   <span class="number">0.0</span>         <span class="number">0</span>          <span class="number">0</span>     <span class="number">5</span></span><br><span class="line">         ...    ...    ...    ...  ...   ...       ...        ...   ...</span><br><span class="line"><span class="number">20201229</span>  <span class="number">18750</span>  <span class="number">19400</span>  <span class="number">18750</span>  <span class="number">19150</span>  ...   <span class="number">0.0</span>         <span class="number">0</span>          <span class="number">0</span>     <span class="number">2</span></span><br><span class="line"><span class="number">20201230</span>  <span class="number">19100</span>  <span class="number">19800</span>  <span class="number">18800</span>  <span class="number">19650</span>  ...   <span class="number">0.0</span>         <span class="number">0</span>          <span class="number">0</span>     <span class="number">2</span></span><br><span class="line">[<span class="number">248</span> rows x <span class="number">11</span> columns]</span><br><span class="line"></span><br><span class="line"><span class="comment"># XAReal 실시간 데이터 구독 후 callback function으로 처리</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nws = Realtime(<span class="string">&#x27;NWS&#x27;</span>, callback=<span class="built_in">print</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nws.subscribe(<span class="string">&#x27;NWS001&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>Realtime.listen()</span><br><span class="line">NWS &#123;<span class="string">&#x27;date&#x27;</span>: <span class="string">&#x27;20210104&#x27;</span>, <span class="string">&#x27;time&#x27;</span>: <span class="string">&#x27;154734&#x27;</span>, <span class="string">&#x27;title&#x27;</span>: <span class="string">&#x27;[포토] 코로나19 직무 교육현장 참관&#x27;</span>&#125;</span><br><span class="line">NWS &#123;<span class="string">&#x27;date&#x27;</span>: <span class="string">&#x27;20210104&#x27;</span>, <span class="string">&#x27;time&#x27;</span>: <span class="string">&#x27;154752&#x27;</span>, <span class="string">&#x27;title&#x27;</span>: <span class="string">&#x27;전성배 신임원장, &quot;국가 디지털전환 선도&quot;&#x27;</span>&#125;</span><br><span class="line">NWS &#123;<span class="string">&#x27;date&#x27;</span>: <span class="string">&#x27;20210104&#x27;</span>, <span class="string">&#x27;time&#x27;</span>: <span class="string">&#x27;154750&#x27;</span>, <span class="string">&#x27;title&#x27;</span>: <span class="string">&#x27;[포토] 정총리, 코로나19 교육현장 참관&#x27;</span>&#125;</span><br><span class="line"><span class="comment"># ...</span></span><br></pre></td></tr></table></figure>
+
+<p><a href="/assets/ebest.py">여기를 클릭</a>하시면 소스코드를 직접 확인하실 수 있고, 위 예시처럼 사용하실 수 있습니다. <strong>모듈을 어떻게 구현하였는지 궁금하신 경우</strong>, 모듈의 소스코드를 실행 순서별로 설명을 해 놓은 <strong>본 포스팅의 본문을 확인하시면 되겠습니다.</strong></p>
+<p>개인적으로 사용하기 위해 구현한 코드인 관계로, 이런저런 문제점들이 많습니다. 😅 포스팅의 내용이나 소스에 개선이 필요한 경우, 피드백을 주시면 감사하겠습니다!</p>
+<span id="more"></span>
+
+<hr>
+<h1 id="1-Requirements"><a href="#1-Requirements" class="headerlink" title="1. Requirements"></a>1. Requirements</h1><ul>
+<li><p><strong>Python 3 (32-bit)</strong><br>xingAPI는 32bit COM을 제공하므로, 64bit python에서 사용할 수 없습니다. 64bit 환경에서 32bit COM을 작동하게 하는 <a target="_blank" rel="noopener" href="https://techtalk.gfi.com/32bit-object-64bit-environment/">hacky한 방법</a>이 있긴 하지만 레지스터값을 일일히 수정해야하는 과정이 번거로우므로, 32bit 파이썬을 사용하는 방법이 편리합니다.<br>32bit python을 따로 설치하는 것도 방법이지만, anaconda를 사용중이라면 아래와 같이 virtual environment를 이용하여 빠르게 환경을 구축할 수 있습니다.</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">set</span> CONDA_FORCE_32BIT=1</span><br><span class="line">$ conda create -n py37_32 python=3.7</span><br><span class="line">$ activate py37_32</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>xingAPI</strong><br>이베스트증권사의 xingAPI 설치파일을 통해 API를 설치합니다. 이후, 다음 두 가지 작업이 필요합니다.</p>
+</li>
+</ul>
+<ol>
+<li><code>C:\eBEST\xingAPI\reg.bat</code> (혹은 <code>(xingAPI 설치경로)\reg.bat</code>)을 실행시켜 dll 등록</li>
+<li>DevCenter의 ‘Res 파일을 모두 다운로드’ 버튼을 클릭하여 res파일을 다운로드</li>
+</ol>
+<ul>
+<li><p><strong>pypiwin32</strong><br>Python에서 COM을 사용하기 위한 라이브러리 <code>pypiwin32</code>를 설치합니다.</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ pip install pypiwin32</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>… and other libraries</strong><br>모듈에서 사용된 라이브러리는 아래와 같습니다.</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os, re, sys, time, pytz</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> getpass <span class="keyword">import</span> getpass</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta</span><br><span class="line"><span class="keyword">from</span> pprint <span class="keyword">import</span> pprint</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> sys.platform == <span class="string">&#x27;win32&#x27;</span>:</span><br><span class="line">    <span class="keyword">from</span> win32com.client <span class="keyword">import</span> DispatchWithEvents</span><br><span class="line">    <span class="keyword">from</span> pythoncom <span class="keyword">import</span> PumpWaitingMessages</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">&#x27;xingAPI는 윈도우 환경에서만 사용 가능합니다&#x27;</span>)</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="2-사용-가능한-res-파일-정보-읽어오기"><a href="#2-사용-가능한-res-파일-정보-읽어오기" class="headerlink" title="2. 사용 가능한 res 파일 정보 읽어오기"></a>2. 사용 가능한 res 파일 정보 읽어오기</h1><p>xingAPI가 설치되어 있는 경로를 아래와 같이 명시해줍니다. 특별히 설치 경로를 변경하지 않았다면, <code>C:\eBEST\xingAPI\</code> 폴더에 위치해 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">XINGAPI_PATH = <span class="string">&#x27;/eBEST/xingAPI/&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>모듈이 로딩되는 시점에, 아래와 같이 xingAPI에서 제공하는 res 파일들에 대한 정보를 읽고 변수 <code>meta_res</code>에 저장해둡니다. 서버로부터 요청에 대한 응답을 수신할 때 제공되는 res 정보를 통해 데이터를 dictionary 형태로 formatting 하는데 사용할 수 있습니다. 이를 통해, 코드의 가독성을 높여주고, 타 라이브러리 (i.e. pandas)와의 호환성을 높일 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">build_meta_res</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; res 파일들의 meta data</span></span><br><span class="line"><span class="string">        </span></span><br><span class="line"><span class="string">        Example</span></span><br><span class="line"><span class="string">        -------</span></span><br><span class="line"><span class="string">        &gt;&gt;&gt; build_meta_res()</span></span><br><span class="line"><span class="string">        &#123;</span></span><br><span class="line"><span class="string">            &#x27;t8413&#x27;: &#123;</span></span><br><span class="line"><span class="string">                &#x27;desc&#x27;: &#x27;주식챠트(일주월)&#x27;,</span></span><br><span class="line"><span class="string">                &#x27;input&#x27;: &#123;</span></span><br><span class="line"><span class="string">                    &#x27;t8413InBlock&#x27;: &#123;</span></span><br><span class="line"><span class="string">                        &#x27;occurs&#x27;: False,</span></span><br><span class="line"><span class="string">                        &#x27;fields&#x27;: [</span></span><br><span class="line"><span class="string">                            &#123;</span></span><br><span class="line"><span class="string">                                &#x27;name&#x27;: &#x27;shcode&#x27;,</span></span><br><span class="line"><span class="string">                                &#x27;desc&#x27;: &#x27;단축코드&#x27;,</span></span><br><span class="line"><span class="string">                                &#x27;type&#x27;: &#x27;char&#x27;,</span></span><br><span class="line"><span class="string">                                &#x27;size&#x27;: 6</span></span><br><span class="line"><span class="string">                            &#125;,</span></span><br><span class="line"><span class="string">                            &#123; ... &#125;,</span></span><br><span class="line"><span class="string">                            ...</span></span><br><span class="line"><span class="string">                        ]</span></span><br><span class="line"><span class="string">                    &#125;</span></span><br><span class="line"><span class="string">                &#125;,</span></span><br><span class="line"><span class="string">                &#x27;output&#x27;: &#123;</span></span><br><span class="line"><span class="string">                    &#x27;t8413OutBlock1&#x27;: &#123;</span></span><br><span class="line"><span class="string">                        &#x27;occurs&#x27;: True,</span></span><br><span class="line"><span class="string">                        &#x27;fields&#x27;: [ &#x27;price&#x27;, ... ]</span></span><br><span class="line"><span class="string">                    &#125;,</span></span><br><span class="line"><span class="string">                    ...</span></span><br><span class="line"><span class="string">                &#125;</span></span><br><span class="line"><span class="string">            &#125;,</span></span><br><span class="line"><span class="string">            ...</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    meta = &#123;&#125;</span><br><span class="line">    </span><br><span class="line">    fnames = <span class="built_in">filter</span>(</span><br><span class="line">        <span class="keyword">lambda</span> x: <span class="keyword">not</span> re.match(<span class="string">r&#x27;.*\_\d+\.res$&#x27;</span>, x),</span><br><span class="line">        os.listdir(os.path.join(XINGAPI_PATH, <span class="string">&#x27;res&#x27;</span>))</span><br><span class="line">    )</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">parse_field</span>(<span class="params">line</span>):</span><br><span class="line">        cols = line.split(<span class="string">&#x27;,&#x27;</span>)</span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="string">&#x27;name&#x27;</span>: cols[<span class="number">1</span>].strip(),</span><br><span class="line">            <span class="string">&#x27;desc&#x27;</span>: cols[<span class="number">0</span>].strip(),</span><br><span class="line">            <span class="string">&#x27;type&#x27;</span>: cols[<span class="number">3</span>].strip(),</span><br><span class="line">            <span class="string">&#x27;size&#x27;</span>: cols[<span class="number">4</span>].strip()</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">parse_file</span>(<span class="params">lines</span>):</span><br><span class="line">        parsed = &#123;&#125;</span><br><span class="line">        lines = <span class="built_in">list</span>(<span class="built_in">map</span>(<span class="keyword">lambda</span> x: x.replace(<span class="string">&#x27;\t&#x27;</span>,<span class="string">&#x27;&#x27;</span>).replace(<span class="string">&#x27;\n&#x27;</span>,<span class="string">&#x27;&#x27;</span>).replace(<span class="string">&#x27;;&#x27;</span>,<span class="string">&#x27;&#x27;</span>).strip(), lines))</span><br><span class="line">        lines = <span class="built_in">list</span>(<span class="built_in">filter</span>(<span class="keyword">lambda</span> x:x, lines))</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(lines)):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;.Func&#x27;</span> <span class="keyword">in</span> lines[i] <span class="keyword">or</span> <span class="string">&#x27;.Feed&#x27;</span> <span class="keyword">in</span> lines[i]:</span><br><span class="line">                parsed[<span class="string">&#x27;desc&#x27;</span>] = lines[i].split(<span class="string">&#x27;,&#x27;</span>)[<span class="number">1</span>].strip()</span><br><span class="line">            <span class="keyword">elif</span> lines[i] == <span class="string">&#x27;begin&#x27;</span>:</span><br><span class="line">                latest_begin = i</span><br><span class="line">            <span class="keyword">elif</span> lines[i] == <span class="string">&#x27;end&#x27;</span>:</span><br><span class="line">                block_info = lines[latest_begin-<span class="number">1</span>].split(<span class="string">&#x27;,&#x27;</span>)</span><br><span class="line">                </span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">not</span> block_info[<span class="number">2</span>] <span class="keyword">in</span> parsed:</span><br><span class="line">                    parsed[block_info[<span class="number">2</span>]] = &#123;&#125;</span><br><span class="line">                </span><br><span class="line">                parsed[block_info[<span class="number">2</span>]][block_info[<span class="number">0</span>]] = &#123;</span><br><span class="line">                    <span class="string">&#x27;occurs&#x27;</span>: <span class="string">&#x27;occurs&#x27;</span> <span class="keyword">in</span> block_info,</span><br><span class="line">                    <span class="string">&#x27;fields&#x27;</span>: <span class="built_in">list</span>(<span class="built_in">map</span>(parse_field, lines[latest_begin+<span class="number">1</span>:i]))</span><br><span class="line">                &#125;</span><br><span class="line">        <span class="keyword">return</span> parsed</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> fname <span class="keyword">in</span> fnames:</span><br><span class="line">        meta[fname.replace(<span class="string">&#x27;.res&#x27;</span>,<span class="string">&#x27;&#x27;</span>)] = parse_file(</span><br><span class="line">            <span class="built_in">open</span>(os.path.join(XINGAPI_PATH, <span class="string">&#x27;res/&#x27;</span>, fname)).readlines()</span><br><span class="line">        )</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> meta</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">meta_res = build_meta_res()</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="3-서버에-접속하기-XASession"><a href="#3-서버에-접속하기-XASession" class="headerlink" title="3. 서버에 접속하기 : XASession"></a>3. 서버에 접속하기 : XASession</h1><p>Synchronous한 디자인에서 서버로 request를 하고 response를 받는 순서는 다음과 같습니다.</p>
+<ol>
+<li>서버 응답 등의 이벤트를 처리하는 ‘Event Listener Class’를 정의</li>
+<li>위의 class를 사용하여, xingAPI의 COM object를 생성</li>
+<li>해당 object의 <code>waiting</code> property를 <code>True</code>로 설정</li>
+<li>COM object를 이용하여 서버로 데이터 요청</li>
+<li>해당 object의 <code>waiting</code> property가 <code>True</code>인 경우, 반복적으로 <code>PumpWaitingMessages</code>를 호출<br>  5-1. 이벤트 발생 시, 이벤트 처리 class가 자신의 <code>waiting</code> property를 <code>False</code>로 설정<br>  5-2. 수신된 데이터가 있을 경우, 자신의 <code>response</code> property에 수신된 데이터를 저장</li>
+<li>해당 object의 <code>response</code> property를 참조하여, 수신된 데이터를 확인</li>
+</ol>
+<p>서버에 접속하고 로그인하는 기능은 <code>XASession</code> COM에 명시되어 있습니다. COM object를 생성하기에 앞서서, 이벤트 발생 시 이를 처리할 Listener Class를 아래와 같이 선언합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">_SessionHandler</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">OnLogin</span>(<span class="params">self, code, msg</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot; 서버와의 로그인이 끝나면 실행되는 함수</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">            @arg code[str] 서버에서 받은 메시지 코드</span></span><br><span class="line"><span class="string">            @arg msg[str] 서버에서 받은 메시지 정보</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self.waiting = <span class="literal">False</span></span><br><span class="line">    </span><br><span class="line">        <span class="keyword">if</span> code == <span class="string">&#x27;0000&#x27;</span>:</span><br><span class="line">            logger.info(<span class="string">&#x27;[*] 로그인 성공&#x27;</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            logger.warning(<span class="string">&#x27;[*] 로그인 실패 : &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(msg))</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">OnDisconnect</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot; 서버와의 연결이 끊어졌을 때 실행되는 함수</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self.waiting = <span class="literal">False</span></span><br><span class="line">        </span><br><span class="line">        logger.info(<span class="string">&#x27;[*] 서버와의 연결이 끊어졌습니다&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>위의 class를 사용하여, <code>XASession</code> COM object를 생성합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line">_session = DispatchWithEvents(<span class="string">&#x27;XA_Session.XASession&#x27;</span>, _SessionHandler)</span><br></pre></td></tr></table></figure>
+
+<p>이제, <code>_session</code> object를 이용하여 xingAPI에 명시된 함수들을 호출할 수 있습니다. 예를들어, <code>ConnectServer</code>라는 함수를 호출하는 것은 아래와 같은 방법으로 가능합니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">_session.ConnectServer(<span class="string">&#x27;hts.ebestsec.co.kr&#x27;</span>, <span class="number">20001</span>)</span><br></pre></td></tr></table></figure>
+
+<p>이를 사용하여, 서버로 로그인을 하는 함수는 아래와 같이 만들 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>(<span class="params"></span></span><br><span class="line"><span class="params">    server=<span class="literal">None</span>,</span></span><br><span class="line"><span class="params">    username=<span class="literal">None</span>,</span></span><br><span class="line"><span class="params">    password=<span class="literal">None</span>,</span></span><br><span class="line"><span class="params"></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot; 로그인</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 기존에 연결되어 있는 서버가 있으면, 연결을 끊는다</span></span><br><span class="line">    <span class="keyword">if</span> _session.IsConnected():</span><br><span class="line">        _session.DisconnectServer()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 로그인 시 필요한 정보를 입력받는다</span></span><br><span class="line">    login_server = (server <span class="keyword">or</span> <span class="built_in">input</span>(<span class="string">&#x27;[*] 접속 서버 ((r)eal / (D)emo / (a)ce) : &#x27;</span>)).lower()[:<span class="number">1</span>]</span><br><span class="line">    login_server = &#123;</span><br><span class="line">        <span class="string">&#x27;r&#x27;</span>: <span class="string">&#x27;hts.ebestsec.co.kr&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;d&#x27;</span>: <span class="string">&#x27;demo.ebestsec.co.kr&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;a&#x27;</span>: <span class="string">&#x27;127.0.0.1&#x27;</span></span><br><span class="line">    &#125;.get(login_server, <span class="string">&#x27;demo.ebestsec.co.kr&#x27;</span>)</span><br><span class="line">    login_port = <span class="number">20001</span></span><br><span class="line">    login_id = username <span class="keyword">or</span> <span class="built_in">input</span>(<span class="string">&#x27;[*] 아이디 : &#x27;</span>)</span><br><span class="line">    login_pw = password <span class="keyword">or</span> getpass(<span class="string">&#x27;[*] 패스워드 : &#x27;</span>)</span><br><span class="line">    login_cert = <span class="string">&#x27;&#x27;</span> <span class="keyword">if</span> login_server == <span class="string">&#x27;demo.ebestsec.co.kr&#x27;</span> <span class="keyword">else</span> getpass(<span class="string">&#x27;[*] 공인인증서 암호 : &#x27;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 로그인 요청을 보낸다</span></span><br><span class="line">    _session.waiting = <span class="literal">True</span></span><br><span class="line">    _session.ConnectServer(login_server, login_port)</span><br><span class="line">    _session.Login(login_id, login_pw, login_cert, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">while</span> _session.waiting:</span><br><span class="line">        PumpWaitingMessages()</span><br><span class="line">        time.sleep(<span class="number">0.05</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="4-데이터-요청하기-XAQuery"><a href="#4-데이터-요청하기-XAQuery" class="headerlink" title="4. 데이터 요청하기 : XAQuery"></a>4. 데이터 요청하기 : XAQuery</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">query</span>(<span class="params">res, send, cont=<span class="literal">False</span>, timeout=<span class="number">10</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot; Query 요청</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        @arg res[str]`t1102` 사용할 res 파일명</span></span><br><span class="line"><span class="string">        @arg send[dict] 전송할 데이터</span></span><br><span class="line"><span class="string">            &#123;</span></span><br><span class="line"><span class="string">                &#x27;Block1&#x27;: [&#123;&#x27;Field1&#x27;: &#x27;Value1&#x27;, &#x27;Field2&#x27;: &#x27;Value2&#x27;&#125;, &#123;...&#125;, &#123;...&#125;],</span></span><br><span class="line"><span class="string">                &#x27;Block2&#x27;: &#123;&#x27;Field3&#x27;: &#x27;Value3&#x27;, &#x27;Field4&#x27;: &#x27;Value4&#x27;&#125;</span></span><br><span class="line"><span class="string">            &#125;</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">            단일 InBlock의 경우에는 아래와 같이 간단한 형식도 입력받음</span></span><br><span class="line"><span class="string">            &#123;&#x27;Field1&#x27;: &#x27;Value1&#x27;, &#x27;Field2&#x27;: &#x27;Value2&#x27;&#125;</span></span><br><span class="line"><span class="string">        @arg cont[*bool=False] 연속조회 여부</span></span><br><span class="line"><span class="string">        @arg timeout[*int=10] 서버 응답 최대 대기 시간, -1인 경우 infinite time</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>결과적으로 함수가 호출되는 모습은 다음과 같습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">query(<span class="string">&#x27;t1101&#x27;</span>, &#123;<span class="string">&#x27;shcode&#x27;</span>: <span class="string">&#x27;000020&#x27;</span>&#125;)</span><br><span class="line">query(<span class="string">&#x27;t1104&#x27;</span>, &#123;</span><br><span class="line">  <span class="string">&#x27;t1104InBlock&#x27;</span>: &#123;<span class="string">&#x27;code&#x27;</span>: <span class="string">&#x27;000020&#x27;</span>, <span class="string">&#x27;nrec&#x27;</span>: <span class="number">2</span>&#125;,</span><br><span class="line">  <span class="string">&#x27;t1104InBlock1&#x27;</span>: [</span><br><span class="line">    &#123;<span class="string">&#x27;dat1&#x27;</span>: <span class="string">&#x27;2&#x27;</span>, <span class="string">&#x27;dat2&#x27;</span>: <span class="string">&#x27;2&#x27;</span>, <span class="string">&#x27;gubn&#x27;</span>: <span class="string">&#x27;1&#x27;</span>, <span class="string">&#x27;indx&#x27;</span>: <span class="string">&#x27;0&#x27;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&#x27;dat1&#x27;</span>: <span class="string">&#x27;1&#x27;</span>, <span class="string">&#x27;dat2&#x27;</span>: <span class="string">&#x27;1&#x27;</span>, <span class="string">&#x27;gubn&#x27;</span>: <span class="string">&#x27;2&#x27;</span>, <span class="string">&#x27;indx&#x27;</span>: <span class="string">&#x27;1&#x27;</span>&#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Query를 요청하고 결과를 수신하는 순서는 <code>XASession</code>과 동일합니다. 차이점은, <code>XAQuery</code> COM을 통해 Query 요청을 한다는 점입니다.<br>이벤트 class인 <code>_QueryHandler</code>가 구현되어 있다고 가정하고, <code>query</code> 함수를 아래와 같이 작성합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">191</span><br></pre></td><td class="code"><pre><span class="line">_query_status = &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">query</span>(<span class="params">res, send, cont=<span class="literal">False</span>, timeout=<span class="number">10</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot; Query 요청</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        @arg res[str]`t1102` 사용할 res 파일명</span></span><br><span class="line"><span class="string">        @arg send[dict] 전송할 데이터</span></span><br><span class="line"><span class="string">            &#123;</span></span><br><span class="line"><span class="string">                &#x27;Block1&#x27;: [&#123;&#x27;Field1&#x27;: &#x27;Value1&#x27;, &#x27;Field2&#x27;: &#x27;Value2&#x27;&#125;, &#123;...&#125;, &#123;...&#125;],</span></span><br><span class="line"><span class="string">                &#x27;Block2&#x27;: &#123;&#x27;Field3&#x27;: &#x27;Value3&#x27;, &#x27;Field4&#x27;: &#x27;Value4&#x27;&#125;</span></span><br><span class="line"><span class="string">            &#125;</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">            단일 InBlock의 경우에는 아래와 같이 간단한 형식도 입력받음</span></span><br><span class="line"><span class="string">            &#123;&#x27;Field1&#x27;: &#x27;Value1&#x27;, &#x27;Field2&#x27;: &#x27;Value2&#x27;&#125;</span></span><br><span class="line"><span class="string">        @arg cont[*bool=False] 연속조회 여부</span></span><br><span class="line"><span class="string">        @arg timeout[*int=10] 서버 응답 최대 대기 시간, -1인 경우 infinite time</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># res 파일 로드</span></span><br><span class="line">    _query = DispatchWithEvents(<span class="string">&#x27;XA_DataSet.XAQuery&#x27;</span>, _QueryHandler)</span><br><span class="line">    _query.init(res)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> cont:</span><br><span class="line">        <span class="comment"># 전송 현황 업데이트</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> res <span class="keyword">in</span> _query_status:</span><br><span class="line">            _query_status[res] = []</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">while</span> _query_status[res] <span class="keyword">and</span> _query_status[res][-<span class="number">1</span>] + <span class="number">1</span> &lt; time.time():</span><br><span class="line">            _query_status[res].pop()</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 초당 전송 횟수를 고려</span></span><br><span class="line">        tr_count_per_sec = _query.GetTRCountPerSec(res)</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(_query_status[res]) &gt;= tr_count_per_sec:</span><br><span class="line">            delay = <span class="built_in">max</span>(_query_status[res][-<span class="number">1</span>] + <span class="number">1.05</span> - time.time(), <span class="number">0</span>)</span><br><span class="line">            time.sleep(delay)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 기간(10분)당 전송 횟수를 고려</span></span><br><span class="line">        <span class="comment"># TODO : 10분 제한이 걸리면 blocking state 진입</span></span><br><span class="line">        tr_count_limit = _query.GetTRCountLimit(res)</span><br><span class="line">        <span class="keyword">while</span> tr_count_limit <span class="keyword">and</span> _query.GetTRCountRequest(res) &gt;= tr_count_limit:</span><br><span class="line">            time.sleep(<span class="number">1</span>)</span><br><span class="line">            _query = DispatchWithEvents(<span class="string">&#x27;XA_DataSet.XAQuery&#x27;</span>, _QueryHandler)</span><br><span class="line">            _query.init(res)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># simplified 된 input를 받았을 경우</span></span><br><span class="line">    send_first_value = <span class="built_in">list</span>(send.values())[<span class="number">0</span>]</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> (</span><br><span class="line">        <span class="built_in">isinstance</span> (send_first_value, <span class="built_in">list</span>) <span class="keyword">or</span></span><br><span class="line">        <span class="built_in">isinstance</span> (send_first_value, <span class="built_in">dict</span>)</span><br><span class="line">    ):</span><br><span class="line">        send = &#123; <span class="string">&#x27;&#123;&#125;InBlock&#x27;</span>.<span class="built_in">format</span>(res): send &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 전송할 데이터를 설정</span></span><br><span class="line">    <span class="keyword">for</span> block <span class="keyword">in</span> send.keys():</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">isinstance</span>(send[block], <span class="built_in">dict</span>):</span><br><span class="line">            <span class="keyword">for</span> (k, v) <span class="keyword">in</span> send[block].items():</span><br><span class="line">                _query.set_data(block, k, v)</span><br><span class="line">        <span class="keyword">elif</span> <span class="built_in">isinstance</span>(send[block], <span class="built_in">list</span>):</span><br><span class="line">            <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(send[block])):</span><br><span class="line">                <span class="keyword">for</span> (k, v) <span class="keyword">in</span> send[block][i].items():</span><br><span class="line">                    _query.set_data(block, k, v, i)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">&#x27;알 수 없는 형태의 데이터입니다&#x27;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        time.sleep(<span class="number">0.05</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 데이터 요청</span></span><br><span class="line">    _query.Request(cont)</span><br><span class="line">    </span><br><span class="line">    now = time.time()</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> cont:</span><br><span class="line">        _query_status[res].insert(<span class="number">0</span>, now)</span><br><span class="line">    _query.waiting = <span class="literal">True</span></span><br><span class="line">    <span class="keyword">while</span> _query.waiting:</span><br><span class="line">        <span class="keyword">if</span> timeout &gt;= <span class="number">0</span> <span class="keyword">and</span> now + timeout &lt; time.time():</span><br><span class="line">            _query.waiting = <span class="literal">False</span></span><br><span class="line">            <span class="keyword">raise</span> TimeoutError(<span class="string">&#x27;Query Timeout&#x27;</span>)</span><br><span class="line">        PumpWaitingMessages()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> _query.response</span><br></pre></td></tr></table></figure>
+
+<p><code>_QueryHandler</code>를 초기화(<code>init</code>)하고 요청을 위해 메시지를 준비(<code>set_data</code>)하는 method들을 구현합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">_QueryHandler</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        self.response = &#123;&#125;</span><br><span class="line">        self.decomp = <span class="literal">False</span></span><br><span class="line">        self.qrycnt = <span class="literal">None</span></span><br><span class="line">        self.waiting = <span class="literal">False</span></span><br><span class="line">        self.res = <span class="literal">None</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init</span>(<span class="params">self, res</span>):</span><br><span class="line">        self.LoadFromResFile(<span class="string">&#x27;/Res/&#123;&#125;.res&#x27;</span>.<span class="built_in">format</span>(res))</span><br><span class="line">        self.res = res</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">set_data</span>(<span class="params">self, block, k, v, index=<span class="number">0</span></span>):</span><br><span class="line">        <span class="keyword">if</span> k == <span class="string">&#x27;comp_yn&#x27;</span> <span class="keyword">and</span> v.lower() == <span class="string">&#x27;y&#x27;</span>:</span><br><span class="line">            self.decomp = <span class="literal">True</span></span><br><span class="line">        <span class="keyword">elif</span> k == <span class="string">&#x27;qrycnt&#x27;</span>:</span><br><span class="line">            self.qrycnt = <span class="built_in">int</span>(v)</span><br><span class="line">        </span><br><span class="line">        self.SetFieldData(block, k, index, v)</span><br></pre></td></tr></table></figure>
+
+<p>이어서, 서버로부터 데이터 수신 시 불리는 이벤트 함수(<code>OnReceiveData</code>)와 이를 처리하는데 쓰이는 helper function(<code>get_block_data</code>)을 구현합니다. 이 과정에서, <strong>2. 사용 가능한 res 파일 정보 읽어오기</strong>에서 선언한 <code>meta_res</code>를 사용하여 결과를 formatting 해줍니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">_QueryHandler</span>:</span><br><span class="line">  <span class="comment"># (... continued)</span></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">get_block_data</span>(<span class="params">self, block, index=<span class="number">0</span></span>):</span><br><span class="line">        block_data = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> field <span class="keyword">in</span> meta_res[self.res][<span class="string">&#x27;output&#x27;</span>][block][<span class="string">&#x27;fields&#x27;</span>]:</span><br><span class="line">            data = self.GetFieldData(block, field[<span class="string">&#x27;name&#x27;</span>], index)</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> field[<span class="string">&#x27;type&#x27;</span>] == <span class="string">&#x27;long&#x27;</span>:</span><br><span class="line">                <span class="keyword">if</span> data == <span class="string">&#x27;-&#x27;</span>:</span><br><span class="line">                    data = <span class="number">0</span></span><br><span class="line">                data = <span class="built_in">int</span>(data <span class="keyword">or</span> <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">elif</span> field[<span class="string">&#x27;type&#x27;</span>] == <span class="string">&#x27;double&#x27;</span> <span class="keyword">or</span> field[<span class="string">&#x27;type&#x27;</span>] == <span class="string">&#x27;float&#x27;</span>:</span><br><span class="line">                data = <span class="built_in">float</span>(data <span class="keyword">or</span> <span class="number">0.0</span>)</span><br><span class="line">            </span><br><span class="line">            block_data[field[<span class="string">&#x27;name&#x27;</span>]] = data</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> block_data</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">OnReceiveData</span>(<span class="params">self, res</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot; 요청 데이터 도착 Listener</span></span><br><span class="line"><span class="string">            </span></span><br><span class="line"><span class="string">            self.GetFieldData(...)를 통해 전송받은 데이터 확인이 가능하다.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">            @arg res[str] 요청 res 파일명</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="comment"># decompress가 필요한 경우 압축해제</span></span><br><span class="line">        <span class="comment"># TODO : OutBlock1 말고 다른 occurs가 있는 케이스 (ex. FOCCQ33600)</span></span><br><span class="line">        <span class="keyword">if</span> self.decomp:</span><br><span class="line">            self.Decompress(res + <span class="string">&#x27;OutBlock1&#x27;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> block <span class="keyword">in</span> meta_res[res][<span class="string">&#x27;output&#x27;</span>].keys():</span><br><span class="line">            <span class="comment"># 해당 블럭이 occurs인 경우,</span></span><br><span class="line">            <span class="keyword">if</span> meta_res[res][<span class="string">&#x27;output&#x27;</span>][block][<span class="string">&#x27;occurs&#x27;</span>]:</span><br><span class="line">                row_res = []</span><br><span class="line">                <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(self.GetBlockCount(block)):</span><br><span class="line">                    row_res.append(self.get_block_data(block, i))</span><br><span class="line">            <span class="comment"># 해당 블럭이 단일 데이터인 경우,</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                row_res = self.get_block_data(block)</span><br><span class="line">        </span><br><span class="line">            self.response[block] = row_res</span><br><span class="line">        </span><br><span class="line">        self.waiting = <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+<p>결과적으로, <code>query</code>를 호출할 경우 아래와 같이 동작합니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>query(<span class="string">&#x27;t1101&#x27;</span>, &#123;<span class="string">&#x27;shcode&#x27;</span>: <span class="string">&#x27;000020&#x27;</span>&#125;)</span><br><span class="line">&#123;<span class="string">&#x27;t1101OutBlock&#x27;</span>: &#123;<span class="string">&#x27;bid&#x27;</span>: <span class="number">6780</span>,</span><br><span class="line">                   <span class="string">&#x27;bidho1&#x27;</span>: <span class="number">9700</span>,</span><br><span class="line">                   <span class="string">&#x27;bidho10&#x27;</span>: <span class="number">9600</span>,</span><br><span class="line">                   <span class="string">&#x27;bidho2&#x27;</span>: <span class="number">9690</span>,</span><br><span class="line">                   (...)</span><br><span class="line">                   <span class="string">&#x27;dnlmtprice&#x27;</span>: <span class="number">6750</span>,</span><br><span class="line">                   <span class="string">&#x27;high&#x27;</span>: <span class="number">9820</span>,</span><br><span class="line">                   <span class="string">&#x27;hname&#x27;</span>: <span class="string">&#x27;동화약품&#x27;</span>,</span><br><span class="line">                   <span class="string">&#x27;ho_status&#x27;</span>: <span class="string">&#x27;2&#x27;</span>,</span><br><span class="line">                   (...)</span><br><span class="line">                   <span class="string">&#x27;yeprice&#x27;</span>: <span class="number">0</span>,</span><br><span class="line">                   <span class="string">&#x27;yesign&#x27;</span>: <span class="string">&#x27;3&#x27;</span>,</span><br><span class="line">                   <span class="string">&#x27;yevolume&#x27;</span>: <span class="number">0</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="5-Wrapper-Functions"><a href="#5-Wrapper-Functions" class="headerlink" title="5. Wrapper Functions"></a>5. Wrapper Functions</h1><p>위의 <code>query</code> 함수를 한번 더 wrapping해서, 조금 더 직관적인 함수들을 만들 수 있습니다. 예를 들어, xingAPI에서는 <code>t8412</code>를 이용하여 주식차트를 분 단위로 가져올 수 있습니다. 한번에 가져올 수 있는 최대 데이터의 양인 2,000개가 넘는 데이터에 대해서는 연속조회도 지원합니다. 해당 res를 호출하는 <code>query</code> 함수를 다음과 같이 wrapping 할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">transactions_min</span>(<span class="params">shcode, interval=<span class="number">1</span>, sdate=<span class="literal">None</span>, edate=<span class="literal">None</span></span>):</span><br><span class="line">  edate = edate <span class="keyword">or</span> datetime.now().strftime(<span class="string">&#x27;%Y%m%d&#x27;</span>)</span><br><span class="line">  sdate = sdate <span class="keyword">or</span> edate</span><br><span class="line">  </span><br><span class="line">  data = []</span><br><span class="line">  cts_date = <span class="string">&#x27; &#x27;</span></span><br><span class="line">  cts_time = <span class="string">&#x27; &#x27;</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    response = query(<span class="string">&#x27;t8412&#x27;</span>, &#123;</span><br><span class="line">      <span class="string">&#x27;shcode&#x27;</span>: shcode,</span><br><span class="line">      <span class="string">&#x27;ncnt&#x27;</span>: interval,</span><br><span class="line">      <span class="string">&#x27;qrycnt&#x27;</span>: <span class="number">2000</span>,</span><br><span class="line">      <span class="string">&#x27;nday&#x27;</span>: <span class="string">&#x27;0&#x27;</span>,</span><br><span class="line">      <span class="string">&#x27;sdate&#x27;</span>: sdate,</span><br><span class="line">      <span class="string">&#x27;edate&#x27;</span>: edate,</span><br><span class="line">      <span class="string">&#x27;cts_date&#x27;</span>: cts_date,</span><br><span class="line">      <span class="string">&#x27;cts_time&#x27;</span>: cts_time,</span><br><span class="line">      <span class="string">&#x27;comp_yn&#x27;</span>: <span class="string">&#x27;Y&#x27;</span></span><br><span class="line">    &#125;, <span class="built_in">len</span>(data) &gt; <span class="number">0</span>)</span><br><span class="line">    </span><br><span class="line">    data = response[<span class="string">&#x27;t8412OutBlock1&#x27;</span>] + data</span><br><span class="line">    cts_date = response[<span class="string">&#x27;t8412OutBlock&#x27;</span>][<span class="string">&#x27;cts_date&#x27;</span>]</span><br><span class="line">    cts_time = response[<span class="string">&#x27;t8412OutBlock&#x27;</span>][<span class="string">&#x27;cts_time&#x27;</span>]</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> (cts_date <span class="keyword">or</span> cts_time):</span><br><span class="line">      <span class="keyword">break</span></span><br><span class="line">  </span><br><span class="line">  data = pd.DataFrame(data)</span><br><span class="line">  data.index = (data[<span class="string">&#x27;date&#x27;</span>] + data[<span class="string">&#x27;time&#x27;</span>]).apply(<span class="keyword">lambda</span> t: datetime.strptime(t, <span class="string">&#x27;%Y%m%d%H%M%S&#x27;</span>).astimezone(pytz.timezone(<span class="string">&#x27;Asia/Seoul&#x27;</span>)))</span><br><span class="line">  </span><br><span class="line">  data = data.rename(columns=&#123;<span class="string">&#x27;jdiff_vol&#x27;</span>: <span class="string">&#x27;volumn&#x27;</span>&#125;)</span><br><span class="line">  data = data[[<span class="string">&#x27;open&#x27;</span>, <span class="string">&#x27;high&#x27;</span>, <span class="string">&#x27;low&#x27;</span>, <span class="string">&#x27;close&#x27;</span>, <span class="string">&#x27;volumn&#x27;</span>, <span class="string">&#x27;value&#x27;</span>, <span class="string">&#x27;jongchk&#x27;</span>, <span class="string">&#x27;rate&#x27;</span>]]</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> data</span><br></pre></td></tr></table></figure>
+
+<p><code>query</code> 함수에서 결과물을 list of dict형태로 변환하므로, DataFrame 형태로 결과물을 바꾸는 작업이 간단해집니다. (<code>data = pd.DataFrame(data)</code>)</p>
+<p>위의 <code>transactions_min</code> 함수는 다음과 같이 사용할 수 있습니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>transactions_min(<span class="string">&#x27;000020&#x27;</span>, interval=<span class="number">3</span>, sdate=<span class="string">&#x27;20201228&#x27;</span>)</span><br><span class="line">                            <span class="built_in">open</span>   high    low  ...  value  jongchk  rate</span><br><span class="line"><span class="number">2020</span>-<span class="number">12</span>-<span class="number">28</span> 09:03:<span class="number">00</span>+09:<span class="number">00</span>  <span class="number">20000</span>  <span class="number">20050</span>  <span class="number">19800</span>  ...    <span class="number">748</span>        <span class="number">0</span>   <span class="number">0.0</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">12</span>-<span class="number">28</span> 09:06:<span class="number">00</span>+09:<span class="number">00</span>  <span class="number">19800</span>  <span class="number">19850</span>  <span class="number">19650</span>  ...    <span class="number">461</span>        <span class="number">0</span>   <span class="number">0.0</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">12</span>-<span class="number">28</span> 09:09:<span class="number">00</span>+09:<span class="number">00</span>  <span class="number">19700</span>  <span class="number">19700</span>  <span class="number">19550</span>  ...    <span class="number">584</span>        <span class="number">0</span>   <span class="number">0.0</span></span><br><span class="line">                          ...    ...    ...  ...    ...      ...   ...</span><br><span class="line"><span class="number">2021</span>-01-04 <span class="number">15</span>:<span class="number">18</span>:<span class="number">00</span>+09:<span class="number">00</span>  <span class="number">19100</span>  <span class="number">19100</span>  <span class="number">19000</span>  ...    <span class="number">265</span>        <span class="number">0</span>   <span class="number">0.0</span></span><br><span class="line"><span class="number">2021</span>-01-04 <span class="number">15</span>:<span class="number">20</span>:<span class="number">00</span>+09:<span class="number">00</span>  <span class="number">19000</span>  <span class="number">19100</span>  <span class="number">18950</span>  ...    <span class="number">138</span>        <span class="number">0</span>   <span class="number">0.0</span></span><br><span class="line"><span class="number">2021</span>-01-04 <span class="number">15</span>:<span class="number">30</span>:<span class="number">00</span>+09:<span class="number">00</span>  <span class="number">19100</span>  <span class="number">19100</span>  <span class="number">19100</span>  ...    <span class="number">391</span>        <span class="number">0</span>   <span class="number">0.0</span></span><br><span class="line">[<span class="number">489</span> rows x <span class="number">8</span> columns]</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="6-실시간-데이터-구독하기-XAReal"><a href="#6-실시간-데이터-구독하기-XAReal" class="headerlink" title="6. 실시간 데이터 구독하기 : XAReal"></a>6. 실시간 데이터 구독하기 : XAReal</h1><p>실시간 데이터의 경우, XASession과 XAQuery와는 약간 다른 방법으로 데이터를 수신합니다.</p>
+<ol>
+<li>데이터 수신 이벤트를 처리하는 Event Listener Class를 정의</li>
+<li>위의 class를 사용하여, xingAPI의 COM object를 생성</li>
+<li>해당 object의 <code>callback</code> property를 데이터 수신 시 실행 할 함수로 설정</li>
+<li>COM object를 이용하여 서버로 데이터 구독</li>
+<li><code>PumpWaitingMessages</code>를 반복적으로 호출<br>  5-1. 데이터 수신 이벤트 발생 시, 이벤트 처리 class가 서버로부터 전달받은 데이터를 인자로 하여 <code>callback</code> property 함수를 실행</li>
+<li>(구독한 데이터가 더 이상 필요가 없는 경우) COM object를 이용하여 구독 취소</li>
+</ol>
+<p>실시간 데이터를 위한 이벤트 리스너 클래스 (<code>_RealtimeHandler</code>)가 있다고 가정하고, 실시간 데이터 핸들링을 위한 클래스 <code>Realtime</code>을 구현하면 다음과 같습니다. xingAPI의 실시간 데이터의 경우 서버로 데이터를 요청할 시에 최대 하나의 field만 사용하므로, <code>meta_res</code>에서 해당 키 값의 이름을 가져와서 사용할 수 있습니다. (라인 357)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Realtime</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, res, callback</span>):</span><br><span class="line">        self._res = res</span><br><span class="line">        self._instance = DispatchWithEvents(<span class="string">&#x27;XA_DataSet.XAReal&#x27;</span>, _RealtimeHandler)</span><br><span class="line">        self._instance.LoadFromResFile(<span class="string">f&#x27;/Res/<span class="subst">&#123;res&#125;</span>.res&#x27;</span>)</span><br><span class="line">        self._instance.callback = callback</span><br><span class="line">        </span><br><span class="line">        self.subscribed_keys = []</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">subscribe</span>(<span class="params">self, key=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="keyword">if</span> key <span class="keyword">in</span> self.subscribed_keys:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&#x27;<span class="subst">&#123;self._res&#125;</span>는 이미 <span class="subst">&#123;key&#125;</span> 데이터를 수신 중입니다.&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> key:</span><br><span class="line">            self._instance.SetFieldData(<span class="string">&#x27;InBlock&#x27;</span>, meta_res[self._res][<span class="string">&#x27;input&#x27;</span>][<span class="string">&#x27;InBlock&#x27;</span>][<span class="string">&#x27;fields&#x27;</span>][<span class="number">0</span>][<span class="string">&#x27;name&#x27;</span>], key)</span><br><span class="line">        self._instance.AdviseRealData()</span><br><span class="line">        </span><br><span class="line">        self.subscribed_keys.append(key)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">unsubscribe</span>(<span class="params">self, key=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="keyword">if</span> key <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            self._instance.UnadviseRealData()</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">if</span> key <span class="keyword">not</span> <span class="keyword">in</span> self.subscribed_keys:</span><br><span class="line">                <span class="keyword">raise</span> ValueError(<span class="string">f&#x27;<span class="subst">&#123;self._res&#125;</span>는 <span class="subst">&#123;key&#125;</span> 데이터를 수신하고 있지 않습니다.&#x27;</span>)</span><br><span class="line">            self._instnace.UnadviseRealDataWithKey(key)</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">listen</span>(<span class="params">delay=<span class="number">.01</span></span>):</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            PumpWaitingMessages()</span><br><span class="line">            time.sleep(delay)</span><br></pre></td></tr></table></figure>
+
+<p>마지막으로, 실시간 데이터를 수신했을 때 호출되는 <code>OnReceiveRealData</code>를 정의해줍니다. 위에서 설정한 <code>callback</code> 함수를 호출합니다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">_RealtimeHandler</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">OnReceiveRealData</span>(<span class="params">self, res</span>):</span><br><span class="line">        response = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> field <span class="keyword">in</span> meta_res[res][<span class="string">&#x27;output&#x27;</span>][<span class="string">&#x27;OutBlock&#x27;</span>][<span class="string">&#x27;fields&#x27;</span>]:</span><br><span class="line">            response[field[<span class="string">&#x27;name&#x27;</span>]] = self.GetFieldData(<span class="string">&#x27;OutBlock&#x27;</span>, field[<span class="string">&#x27;name&#x27;</span>])</span><br><span class="line"></span><br><span class="line">        self.callback(res, response)</span><br></pre></td></tr></table></figure>
+
+<p>결과적으로, 위 코드를 사용하여 실시간 데이터를 요청하면 다음과 같이 실행이 됩니다.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">def</span> <span class="title function_">callback</span>(<span class="params">res, response</span>):</span><br><span class="line"><span class="meta">... </span>  <span class="keyword">if</span> res == <span class="string">&#x27;NWS&#x27;</span>:</span><br><span class="line"><span class="meta">... </span>    <span class="built_in">print</span>(<span class="string">f&#x27;현재시간 : <span class="subst">&#123;response[<span class="string">&quot;time&quot;</span>]&#125;</span> / 기사제목 : <span class="subst">&#123;response[<span class="string">&quot;title&quot;</span>]&#125;</span>&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nws = Realtime(<span class="string">&#x27;NWS&#x27;</span>, callback=callback)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nws.subscribe(<span class="string">&#x27;NWS001&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>Realtime.listen()</span><br><span class="line">현재시간 <span class="number">154734</span> / 기사제목 [포토] 코로나<span class="number">19</span> 직무 교육현장 참관</span><br><span class="line">현재시간 <span class="number">154752</span> / 기사제목 전성배 신임원장, <span class="string">&quot;국가 디지털전환 선도&quot;</span></span><br><span class="line">현재시간 <span class="number">154750</span> / 기사제목 [포토] 정총리, 코로나<span class="number">19</span> 교육현장 참관</span><br><span class="line"><span class="comment"># ...</span></span><br></pre></td></tr></table></figure>
+
+<p><code>_RealtimeHandler</code>가 인자로 <code>res</code>를 전달해주므로, <code>callback</code> 함수 내부적으로 어떤 실시간 데이터가 들어왔는지 구분할 수 있습니다.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>포스트 작성자:  </strong>Hwanghee Kim
+  </li>
+  <li class="post-copyright-link">
+      <strong>Post link: </strong>
+      <a href="https://hwangheek.github.io/2021/neat-xingapi-with-python/" title="Python으로 이베스트증권 xingAPI 깔끔하게 사용하기 (w&#x2F; pandas)">https://hwangheek.github.io/2021/neat-xingapi-with-python/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice:  </strong>All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> unless stating additionally.
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Python/" rel="tag"># Python</a>
+              <a href="/tags/System-Trading/" rel="tag"># System Trading</a>
+              <a href="/tags/ebest/" rel="tag"># ebest</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/pandas-custom-businessday-from-krx/" rel="prev" title="KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기">
+                  <i class="fa fa-chevron-left"></i> KRX의 휴장일 데이터를 기반으로 Python pandas의 AbstractHolidayCalendar와 CustomBusinessDay 사용하기
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/black-litterman/" rel="next" title="Python으로 블랙리터만 (Black-Litterman) 모델 구현하기">
+                  Python으로 블랙리터만 (Black-Litterman) 모델 구현하기 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    
+  <div class="comments" id="disqus_thread">
+    <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+  </div>
+  
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hwanghee Kim</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<script class="next-config" data-name="disqus" type="application/json">{"enable":true,"shortname":"blog-w5rrs5lidd","count":true,"i18n":{"disqus":"disqus"}}</script>
+<script src="/js/third-party/comments/disqus.js"></script>
+
+</body>
+</html>
